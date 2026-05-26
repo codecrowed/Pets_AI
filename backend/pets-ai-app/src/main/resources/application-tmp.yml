@@ -1,0 +1,84 @@
+spring:
+  ai:
+    openai:
+      api-key: ${AI_API_KEY}
+      base-url: ${AI_API_BASE_URL:https://api.deepseek.com}
+      chat:
+        options:
+          model: deepseek-chat
+          temperature: 0.7
+          max-tokens: 4096
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: 6379
+      pool-size: 10
+      database: 0
+      min-idle-size: 5
+      connection-timeout: 30000
+      retry-attempts : 3
+      retry-interval : 1000
+      ping-interval : 60000
+      keep-alive : true
+      password: ${REDIS_PASSWORD}
+
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+# JWT Configuration
+app:
+  jwt:
+    secret: ${JWT_SECRET:myDefaultSecretKeyForDevelopmentOnlyDoNotUseInProduction2024!}
+    access-token-expiration: 3600
+    refresh-token-expiration: 604800
+  cors:
+    allowed-origins: ${CORS_ORIGINS:http://localhost:3000}
+  rate-limit:
+    requests-per-minute: 30
+    streaming-requests-per-minute: 10
+
+# Aliyun OSS File Storage
+aliyun:
+  oss:
+    access-key-id: ${ALIYUN_OSS_ACCESS_KEY_ID}
+    access-key-secret: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
+    bucket-name: ${ALIYUN_OSS_BUCKET_NAME}
+    endpoint: ${ALIYUN_OSS_ENDPOINT}
+    base-dir: ${ALIYUN_OSS_BASE_DIR:ai-chat/images}
+    expire-time: 604800
+
+# Actuator
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+logging:
+  level:
+    com.aichat: DEBUG
+    org.springframework.ai: DEBUG

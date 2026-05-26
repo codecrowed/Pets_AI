@@ -1,0 +1,235 @@
+{
+  "info": {
+    "_postman_id": "pet-controller-collection",
+    "name": "Pets AI - 宠物档案管理",
+    "description": "宠物档案 CRUD 接口（PetController）\n\n## 认证\n所有接口需在请求头携带 `Authorization: Bearer <accessToken>`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "petId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "列出当前用户的宠物",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/pets",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "pets"]
+        },
+        "description": "返回当前登录用户的所有宠物摘要列表"
+      },
+      "response": [
+        {
+          "name": "成功响应示例",
+          "originalRequest": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pets"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"豆豆\",\n      \"species\": \"dog\",\n      \"breed\": \"金毛\",\n      \"avatarEmoji\": \"🐕\",\n      \"avatarUrl\": null,\n      \"gender\": \"male\",\n      \"birthday\": \"2022-05-15\",\n      \"neutered\": true,\n      \"microchipped\": true\n    }\n  ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "获取宠物详情",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/pets/{{petId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "pets", "{{petId}}"]
+        },
+        "description": "根据宠物 ID 获取详细信息"
+      },
+      "response": [
+        {
+          "name": "成功响应示例",
+          "originalRequest": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pets/{{petId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pets", "{{petId}}"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"豆豆\",\n    \"species\": \"dog\",\n    \"breed\": \"金毛\",\n    \"birthday\": \"2022-05-15\",\n    \"weightKg\": 25.5,\n    \"gender\": \"male\",\n    \"neutered\": true,\n    \"microchipped\": true,\n    \"avatarUrl\": null,\n    \"avatarEmoji\": \"🐕\",\n    \"allergies\": \"鸡肉过敏\",\n    \"chronicConditions\": null,\n    \"mainFoodBrand\": \"皇家\",\n    \"vetHospital\": \"XX宠物医院\",\n    \"notes\": \"性格温顺\",\n    \"createdAt\": \"2024-01-15T08:30:00Z\",\n    \"updatedAt\": \"2024-01-20T10:00:00Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "创建宠物档案",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"豆豆\",\n  \"species\": \"dog\",\n  \"breed\": \"金毛\",\n  \"birthday\": \"2022-05-15\",\n  \"weightKg\": 25.5,\n  \"gender\": \"male\",\n  \"neutered\": true,\n  \"microchipped\": true,\n  \"avatarUrl\": null,\n  \"avatarEmoji\": \"🐕\",\n  \"allergies\": \"鸡肉过敏\",\n  \"chronicConditions\": null,\n  \"mainFoodBrand\": \"皇家\",\n  \"vetHospital\": \"XX宠物医院\",\n  \"notes\": \"性格温顺\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/pets",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "pets"]
+        },
+        "description": "为当前用户创建新的宠物档案\n\n### 请求参数说明\n| 字段 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| name | string | 是 | 宠物昵称，最长64字符 |\n| species | string | 是 | 宠物类型(dog/cat等) |\n| breed | string | 否 | 品种，最长128字符 |\n| birthday | date | 否 | 出生日期 |\n| weightKg | decimal | 否 | 体重(kg) |\n| gender | string | 否 | 性别(male/female) |\n| neutered | boolean | 否 | 是否绝育 |\n| microchipped | boolean | 否 | 是否植入芯片 |\n| avatarUrl | string | 否 | 头像URL |\n| avatarEmoji | string | 否 | 头像emoji，最长16字符 |\n| allergies | string | 否 | 过敏史，最长512字符 |\n| chronicConditions | string | 否 | 慢性疾病，最长512字符 |\n| mainFoodBrand | string | 否 | 主食品牌，最长256字符 |\n| vetHospital | string | 否 | 常去医院，最长256字符 |\n| notes | string | 否 | 备注 |"
+      },
+      "response": [
+        {
+          "name": "创建成功",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"豆豆\",\n  \"species\": \"dog\",\n  \"breed\": \"金毛\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pets",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pets"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"豆豆\",\n    \"species\": \"dog\",\n    \"breed\": \"金毛\",\n    \"birthday\": null,\n    \"weightKg\": null,\n    \"gender\": null,\n    \"neutered\": null,\n    \"microchipped\": null,\n    \"avatarUrl\": null,\n    \"avatarEmoji\": null,\n    \"allergies\": null,\n    \"chronicConditions\": null,\n    \"mainFoodBrand\": null,\n    \"vetHospital\": null,\n    \"notes\": null,\n    \"createdAt\": \"2024-01-15T08:30:00Z\",\n    \"updatedAt\": \"2024-01-15T08:30:00Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "更新宠物档案",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"豆豆\",\n  \"species\": \"dog\",\n  \"breed\": \"金毛\",\n  \"birthday\": \"2022-05-15\",\n  \"weightKg\": 26.0,\n  \"gender\": \"male\",\n  \"neutered\": true,\n  \"microchipped\": true,\n  \"avatarUrl\": null,\n  \"avatarEmoji\": \"🐕\",\n  \"allergies\": \"鸡肉过敏\",\n  \"chronicConditions\": null,\n  \"mainFoodBrand\": \"皇家成犬粮\",\n  \"vetHospital\": \"XX宠物医院\",\n  \"notes\": \"性格温顺，喜欢散步\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/pets/{{petId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "pets", "{{petId}}"]
+        },
+        "description": "更新指定宠物的档案信息\n\n### 请求参数说明\n| 字段 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| name | string | 是 | 宠物昵称，最长64字符 |\n| species | string | 是 | 宠物类型(dog/cat等) |\n| breed | string | 否 | 品种，最长128字符 |\n| birthday | date | 否 | 出生日期 |\n| weightKg | decimal | 否 | 体重(kg) |\n| gender | string | 否 | 性别(male/female) |\n| neutered | boolean | 否 | 是否绝育 |\n| microchipped | boolean | 否 | 是否植入芯片 |\n| avatarUrl | string | 否 | 头像URL |\n| avatarEmoji | string | 否 | 头像emoji，最长16字符 |\n| allergies | string | 否 | 过敏史，最长512字符 |\n| chronicConditions | string | 否 | 慢性疾病，最长512字符 |\n| mainFoodBrand | string | 否 | 主食品牌，最长256字符 |\n| vetHospital | string | 否 | 常去医院，最长256字符 |\n| notes | string | 否 | 备注 |"
+      },
+      "response": [
+        {
+          "name": "更新成功",
+          "originalRequest": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"豆豆\",\n  \"species\": \"dog\",\n  \"weightKg\": 26.0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pets/{{petId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pets", "{{petId}}"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {\n    \"id\": 1,\n    \"name\": \"豆豆\",\n    \"species\": \"dog\",\n    \"breed\": \"金毛\",\n    \"birthday\": \"2022-05-15\",\n    \"weightKg\": 26.0,\n    \"gender\": \"male\",\n    \"neutered\": true,\n    \"microchipped\": true,\n    \"avatarUrl\": null,\n    \"avatarEmoji\": \"🐕\",\n    \"allergies\": \"鸡肉过敏\",\n    \"chronicConditions\": null,\n    \"mainFoodBrand\": \"皇家成犬粮\",\n    \"vetHospital\": \"XX宠物医院\",\n    \"notes\": \"性格温顺，喜欢散步\",\n    \"createdAt\": \"2024-01-15T08:30:00Z\",\n    \"updatedAt\": \"2024-01-20T10:00:00Z\"\n  }\n}"
+        }
+      ]
+    },
+    {
+      "name": "删除宠物档案",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/v1/pets/{{petId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "v1", "pets", "{{petId}}"]
+        },
+        "description": "软删除指定宠物的档案"
+      },
+      "response": [
+        {
+          "name": "删除成功",
+          "originalRequest": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pets/{{petId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pets", "{{petId}}"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "body": "{\n  \"code\": 200,\n  \"message\": \"success\",\n  \"data\": {}\n}"
+        }
+      ]
+    }
+  ]
+}

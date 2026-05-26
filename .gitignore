@@ -1,5 +1,8 @@
 # backend
 /backend/**/target/
+**/application-dev.yml
+**/logs/*.log
+**/logs/*.log.gz
 frontend-pet/logs/
 frontend-pet/!.mvn/wrapper/maven-wrapper.jar
 frontend-pet/!**/src/main/**/target/

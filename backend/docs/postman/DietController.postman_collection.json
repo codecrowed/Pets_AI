@@ -1,0 +1,682 @@
+{
+  "info": {
+    "_postman_id": "diet-controller-collection",
+    "name": "Pets AI - 宠物饮食记录管理",
+    "description": "宠物饮食记录、统计分析、饮水记录、食物库搜索和AI营养分析接口\n\n## 认证\n所有接口需在请求头携带 `Authorization: Bearer <accessToken>`",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081/pet-ai-app",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "petId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "date",
+      "value": "2026-04-20",
+      "type": "string"
+    },
+    {
+      "key": "recordId",
+      "value": "1",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "饮食记录",
+      "description": "宠物饮食记录管理",
+      "item": [
+        {
+          "name": "获取指定日期饮食记录列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/diet-records/by-date?petId={{petId}}&date={{date}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "diet-records", "by-date"],
+              "query": [
+                {
+                  "key": "petId",
+                  "value": "{{petId}}",
+                  "description": "宠物ID"
+                },
+                {
+                  "key": "date",
+                  "value": "{{date}}",
+                  "description": "日期 (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "获取指定宠物在指定日期的所有饮食记录"
+          },
+          "response": [
+            {
+              "name": "成功响应示例",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/diet-records/by-date?petId=1&date=2026-04-20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "diet-records", "by-date"],
+                  "query": [
+                    { "key": "petId", "value": "1" },
+                    { "key": "date", "value": "2026-04-20" }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"petId\": 1,\n      \"foodId\": 1,\n      \"foodName\": \"皇家柴犬粮\",\n      \"foodIcon\": \"🐕\",\n      \"weight\": 80,\n      \"mealType\": \"BREAKFAST\",\n      \"mealTypeLabel\": \"早餐\",\n      \"mealTime\": \"2026-04-20T07:30:00Z\",\n      \"estimatedKcal\": 130,\n      \"proteinG\": 20.0,\n      \"fatG\": 11.2,\n      \"carbG\": 32.0,\n      \"createdAt\": \"2026-04-20T07:35:00Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "添加单条饮食记录",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"petId\": 1,\n  \"foodId\": 1,\n  \"foodName\": \"皇家柴犬粮\",\n  \"weight\": 80,\n  \"mealType\": \"BREAKFAST\",\n  \"mealTime\": \"2026-04-20T07:30:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/diet-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "diet-records"]
+            },
+            "description": "为宠物添加一条饮食记录\n\n### 请求参数说明\n| 字段 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| petId | long | 是 | 宠物ID |\n| foodId | long | 否 | 食物库ID（可选） |\n| foodName | string | 是 | 食物名称 |\n| weight | int | 是 | 重量(克) |\n| mealType | string | 是 | 餐次类型：BREAKFAST/LUNCH/DINNER/SNACK/SUPPLEMENT |\n| mealTime | string | 是 | 用餐时间 |"
+          },
+          "response": [
+            {
+              "name": "创建成功",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"petId\": 1,\n  \"foodId\": 1,\n  \"foodName\": \"皇家柴犬粮\",\n  \"weight\": 80,\n  \"mealType\": \"BREAKFAST\",\n  \"mealTime\": \"2026-04-20T07:30:00\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/diet-records",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "diet-records"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"id\": 1,\n    \"petId\": 1,\n    \"foodId\": 1,\n    \"foodName\": \"皇家柴犬粮\",\n    \"foodIcon\": \"🐕\",\n    \"weight\": 80,\n    \"mealType\": \"BREAKFAST\",\n    \"mealTypeLabel\": \"早餐\",\n    \"mealTime\": \"2026-04-20T07:30:00Z\",\n    \"estimatedKcal\": 130,\n    \"proteinG\": 20.0,\n    \"fatG\": 11.2,\n    \"carbG\": 32.0,\n    \"createdAt\": \"2026-04-20T07:35:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "编辑单条饮食记录",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"foodName\": \"皇家柴犬粮\",\n  \"weight\": 100,\n  \"mealType\": \"BREAKFAST\",\n  \"mealTime\": \"2026-04-20T07:45:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/diet-records/{{recordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "diet-records", "{{recordId}}"]
+            },
+            "description": "编辑指定的饮食记录\n\n### 请求参数说明\n| 字段 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| foodName | string | 否 | 食物名称 |\n| weight | int | 否 | 重量(克) |\n| mealType | string | 否 | 餐次类型 |\n| mealTime | string | 否 | 用餐时间 |"
+          },
+          "response": [
+            {
+              "name": "更新成功",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"weight\": 100\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/diet-records/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "diet-records", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"id\": 1,\n    \"petId\": 1,\n    \"foodId\": 1,\n    \"foodName\": \"皇家柴犬粮\",\n    \"foodIcon\": \"🐕\",\n    \"weight\": 100,\n    \"mealType\": \"BREAKFAST\",\n    \"mealTypeLabel\": \"早餐\",\n    \"mealTime\": \"2026-04-20T07:45:00Z\",\n    \"estimatedKcal\": 162,\n    \"proteinG\": 25.0,\n    \"fatG\": 14.0,\n    \"carbG\": 40.0,\n    \"createdAt\": \"2026-04-20T07:35:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "删除单条饮食记录",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/diet-records/{{recordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "diet-records", "{{recordId}}"]
+            },
+            "description": "软删除指定的饮食记录"
+          },
+          "response": [
+            {
+              "name": "删除成功",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/diet-records/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "diet-records", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "饮食统计",
+      "description": "宠物饮食数据统计",
+      "item": [
+        {
+          "name": "获取当日饮食统计概览",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/diet-stats/daily?petId={{petId}}&date={{date}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "diet-stats", "daily"],
+              "query": [
+                {
+                  "key": "petId",
+                  "value": "{{petId}}",
+                  "description": "宠物ID"
+                },
+                {
+                  "key": "date",
+                  "value": "{{date}}",
+                  "description": "日期 (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "获取指定宠物在指定日期的饮食统计概览，包括总热量、营养成分和各餐次分组"
+          },
+          "response": [
+            {
+              "name": "成功响应示例",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/diet-stats/daily?petId=1&date=2026-04-20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "diet-stats", "daily"],
+                  "query": [
+                    { "key": "petId", "value": "1" },
+                    { "key": "date", "value": "2026-04-20" }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"date\": \"2026-04-20\",\n    \"totalKcal\": 342,\n    \"proteinG\": 45.5,\n    \"fatG\": 28.2,\n    \"carbG\": 80.0,\n    \"targetKcal\": 480,\n    \"waterMl\": 280,\n    \"progressPercent\": 71,\n    \"mealGroups\": [\n      {\n        \"mealType\": \"BREAKFAST\",\n        \"mealTypeLabel\": \"早餐\",\n        \"mealIcon\": \"🌅\",\n        \"totalKcal\": 162,\n        \"items\": [\n          {\n            \"id\": 1,\n            \"petId\": 1,\n            \"foodId\": 1,\n            \"foodName\": \"皇家柴犬粮\",\n            \"foodIcon\": \"🐕\",\n            \"weight\": 80,\n            \"mealType\": \"BREAKFAST\",\n            \"mealTypeLabel\": \"早餐\",\n            \"mealTime\": \"2026-04-20T07:30:00Z\",\n            \"estimatedKcal\": 130,\n            \"proteinG\": 20.0,\n            \"fatG\": 11.2,\n            \"carbG\": 32.0,\n            \"createdAt\": \"2026-04-20T07:35:00Z\"\n          }\n        ]\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "获取连续记录天数",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/diet-stats/continuous-days?petId={{petId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "diet-stats", "continuous-days"],
+              "query": [
+                {
+                  "key": "petId",
+                  "value": "{{petId}}",
+                  "description": "宠物ID"
+                }
+              ]
+            },
+            "description": "获取指定宠物的连续饮食记录天数和鼓励消息"
+          },
+          "response": [
+            {
+              "name": "成功响应示例",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/diet-stats/continuous-days?petId=1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "diet-stats", "continuous-days"],
+                  "query": [{ "key": "petId", "value": "1" }]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"continuousDays\": 6,\n    \"message\": \"连续记录 6 天，加油！\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "获取近7天热量趋势",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/diet-stats/weekly-calories?petId={{petId}}&endDate={{date}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "diet-stats", "weekly-calories"],
+              "query": [
+                {
+                  "key": "petId",
+                  "value": "{{petId}}",
+                  "description": "宠物ID"
+                },
+                {
+                  "key": "endDate",
+                  "value": "{{date}}",
+                  "description": "结束日期 (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "获取指定宠物近7天的热量摄入趋势数据"
+          },
+          "response": [
+            {
+              "name": "成功响应示例",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/diet-stats/weekly-calories?petId=1&endDate=2026-04-20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "diet-stats", "weekly-calories"],
+                  "query": [
+                    { "key": "petId", "value": "1" },
+                    { "key": "endDate", "value": "2026-04-20" }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"dailyCalories\": [\n      { \"date\": \"2026-04-14\", \"dayLabel\": \"周一\", \"calories\": 390, \"targetCalories\": 480 },\n      { \"date\": \"2026-04-15\", \"dayLabel\": \"周二\", \"calories\": 480, \"targetCalories\": 480 },\n      { \"date\": \"2026-04-16\", \"dayLabel\": \"周三\", \"calories\": 320, \"targetCalories\": 480 },\n      { \"date\": \"2026-04-17\", \"dayLabel\": \"周四\", \"calories\": 460, \"targetCalories\": 480 },\n      { \"date\": \"2026-04-18\", \"dayLabel\": \"周五\", \"calories\": 510, \"targetCalories\": 480 },\n      { \"date\": \"2026-04-19\", \"dayLabel\": \"周六\", \"calories\": 430, \"targetCalories\": 480 },\n      { \"date\": \"2026-04-20\", \"dayLabel\": \"今天\", \"calories\": 342, \"targetCalories\": 480 }\n    ],\n    \"avgCalories\": 419,\n    \"targetCalories\": 480\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "饮水记录",
+      "description": "宠物饮水记录管理",
+      "item": [
+        {
+          "name": "获取当日饮水统计",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/water-records/daily?petId={{petId}}&date={{date}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "water-records", "daily"],
+              "query": [
+                {
+                  "key": "petId",
+                  "value": "{{petId}}",
+                  "description": "宠物ID"
+                },
+                {
+                  "key": "date",
+                  "value": "{{date}}",
+                  "description": "日期 (YYYY-MM-DD)"
+                }
+              ]
+            },
+            "description": "获取指定宠物在指定日期的饮水统计和记录列表"
+          },
+          "response": [
+            {
+              "name": "成功响应示例",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/water-records/daily?petId=1&date=2026-04-20",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "water-records", "daily"],
+                  "query": [
+                    { "key": "petId", "value": "1" },
+                    { "key": "date", "value": "2026-04-20" }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"date\": \"2026-04-20\",\n    \"totalWaterMl\": 280,\n    \"targetWaterMl\": 400,\n    \"progressPercent\": 70,\n    \"records\": [\n      {\n        \"id\": 1,\n        \"petId\": 1,\n        \"waterAmount\": 150,\n        \"recordTime\": \"2026-04-20T08:00:00Z\",\n        \"createdAt\": \"2026-04-20T08:05:00Z\"\n      },\n      {\n        \"id\": 2,\n        \"petId\": 1,\n        \"waterAmount\": 130,\n        \"recordTime\": \"2026-04-20T12:30:00Z\",\n        \"createdAt\": \"2026-04-20T12:35:00Z\"\n      }\n    ]\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "添加饮水记录",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"petId\": 1,\n  \"waterAmount\": 100,\n  \"recordTime\": \"2026-04-20T10:00:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/water-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "water-records"]
+            },
+            "description": "为宠物添加一条饮水记录\n\n### 请求参数说明\n| 字段 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| petId | long | 是 | 宠物ID |\n| waterAmount | int | 是 | 饮水量(ml) |\n| recordTime | string | 是 | 记录时间 |"
+          },
+          "response": [
+            {
+              "name": "创建成功",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"petId\": 1,\n  \"waterAmount\": 100,\n  \"recordTime\": \"2026-04-20T10:00:00\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/water-records",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "water-records"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"id\": 3,\n    \"petId\": 1,\n    \"waterAmount\": 100,\n    \"recordTime\": \"2026-04-20T10:00:00Z\",\n    \"createdAt\": \"2026-04-20T10:05:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "编辑饮水记录",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"waterAmount\": 120,\n  \"recordTime\": \"2026-04-20T10:15:00\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/water-records/{{recordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "water-records", "{{recordId}}"]
+            },
+            "description": "编辑指定的饮水记录\n\n### 请求参数说明\n| 字段 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| waterAmount | int | 否 | 饮水量(ml) |\n| recordTime | string | 否 | 记录时间 |"
+          },
+          "response": [
+            {
+              "name": "更新成功",
+              "originalRequest": {
+                "method": "PUT",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"waterAmount\": 120\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/water-records/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "water-records", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"id\": 1,\n    \"petId\": 1,\n    \"waterAmount\": 120,\n    \"recordTime\": \"2026-04-20T10:15:00Z\",\n    \"createdAt\": \"2026-04-20T08:05:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "删除饮水记录",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/water-records/{{recordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "water-records", "{{recordId}}"]
+            },
+            "description": "软删除指定的饮水记录"
+          },
+          "response": [
+            {
+              "name": "删除成功",
+              "originalRequest": {
+                "method": "DELETE",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/water-records/1",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "water-records", "1"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": null\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "食物库",
+      "description": "食物搜索与常用食物",
+      "item": [
+        {
+          "name": "搜索食物库",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/foods/search?keyword=皇家&pageNum=1&pageSize=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "foods", "search"],
+              "query": [
+                {
+                  "key": "keyword",
+                  "value": "皇家",
+                  "description": "搜索关键词"
+                },
+                {
+                  "key": "pageNum",
+                  "value": "1",
+                  "description": "页码（可选，默认1）"
+                },
+                {
+                  "key": "pageSize",
+                  "value": "20",
+                  "description": "每页数量（可选，默认20）"
+                }
+              ]
+            },
+            "description": "搜索食物库，同时搜索普通食物和主粮，主粮优先展示"
+          },
+          "response": [
+            {
+              "name": "成功响应示例",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/foods/search?keyword=皇家",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "foods", "search"],
+                  "query": [{ "key": "keyword", "value": "皇家" }]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"皇家柴犬成犬粮\",\n      \"icon\": \"🐕\",\n      \"category\": \"STAPLE_FOOD\",\n      \"categoryLabel\": \"主粮\",\n      \"isStapleFood\": true,\n      \"stapleFoodId\": 1,\n      \"stapleFood\": {\n        \"id\": 1,\n        \"name\": \"皇家柴犬成犬粮\",\n        \"brand\": \"皇家Royal Canin\",\n        \"foodType\": \"COMPLETE_DOG\",\n        \"foodTypeLabel\": \"全价狗粮\",\n        \"targetSpecies\": \"DOG\",\n        \"targetSpeciesLabel\": \"狗\",\n        \"targetBreed\": \"柴犬\",\n        \"targetAge\": \"ADULT\",\n        \"targetAgeLabel\": \"成年\",\n        \"crudeProteinPct\": 25.0,\n        \"crudeFatPct\": 14.0,\n        \"crudeAshPct\": 6.5,\n        \"description\": \"专为柴犬成犬设计，支持皮肤健康和理想体重\"\n      },\n      \"kcalPer100g\": 350,\n      \"proteinPer100g\": 25.0,\n      \"fatPer100g\": 14.0,\n      \"carbPer100g\": 40.5,\n      \"description\": \"专为柴犬成犬设计，支持皮肤健康和理想体重\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "获取常用食物列表",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/foods/frequent",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "foods", "frequent"]
+            },
+            "description": "返回当前用户最常使用的食物列表"
+          },
+          "response": [
+            {
+              "name": "成功响应示例",
+              "originalRequest": {
+                "method": "GET",
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/foods/frequent",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "foods", "frequent"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"name\": \"皇家柴犬成犬粮\",\n      \"icon\": \"🐕\",\n      \"category\": \"STAPLE_FOOD\",\n      \"categoryLabel\": \"主粮\",\n      \"isStapleFood\": true,\n      \"stapleFoodId\": 1,\n      \"stapleFood\": null,\n      \"kcalPer100g\": 350,\n      \"proteinPer100g\": 25.0,\n      \"fatPer100g\": 14.0,\n      \"carbPer100g\": 40.5,\n      \"description\": \"专为柴犬成犬设计\"\n    },\n    {\n      \"id\": 20,\n      \"name\": \"鸡胸肉（熟）\",\n      \"icon\": \"🍗\",\n      \"category\": \"MEAT\",\n      \"categoryLabel\": \"肉类\",\n      \"isStapleFood\": false,\n      \"stapleFoodId\": null,\n      \"stapleFood\": null,\n      \"kcalPer100g\": 165,\n      \"proteinPer100g\": 31.0,\n      \"fatPer100g\": 3.6,\n      \"carbPer100g\": 0.0,\n      \"description\": \"高蛋白低脂肪，宠物最佳蛋白来源之一\"\n    }\n  ]\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AI营养分析",
+      "description": "AI驱动的宠物饮食营养分析",
+      "item": [
+        {
+          "name": "生成AI营养分析",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"petId\": 1,\n  \"date\": \"2026-04-20\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ai/diet-analysis",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ai", "diet-analysis"]
+            },
+            "description": "根据指定日期的饮食记录生成AI营养分析和建议\n\n### 请求参数说明\n| 字段 | 类型 | 必填 | 说明 |\n|------|------|------|------|\n| petId | long | 是 | 宠物ID |\n| date | string | 是 | 日期 (YYYY-MM-DD) |"
+          },
+          "response": [
+            {
+              "name": "分析成功",
+              "originalRequest": {
+                "method": "POST",
+                "header": [{ "key": "Content-Type", "value": "application/json" }],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"petId\": 1,\n  \"date\": \"2026-04-20\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/v1/ai/diet-analysis",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["api", "v1", "ai", "diet-analysis"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "body": "{\n  \"code\": \"200\",\n  \"message\": \"success\",\n  \"success\": true,\n  \"timestamp\": 1713600000000,\n  \"data\": {\n    \"date\": \"2026-04-20\",\n    \"summary\": \"今日热量摄入偏低，建议适当增加食物摄入。蛋白质摄入充足，脂肪摄入正常。\",\n    \"suggestions\": [\n      \"可以适当增加主粮的分量\",\n      \"添加一些鸡胸肉等高蛋白食物\",\n      \"确保每日按时喂食\"\n    ],\n    \"nutritionAnalysis\": {\n      \"proteinStatus\": \"充足\",\n      \"fatStatus\": \"正常\",\n      \"carbStatus\": \"正常\",\n      \"calorieStatus\": \"偏低\",\n      \"overallStatus\": \"一般\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+spring:
+  profiles:
+    active: dev
+  # 流式 SSE（Flux）长连接，避免默认异步超时过早断开
+  mvc:
+    async:
+      request-timeout: 10m
+
+# 日志目录（相对进程工作目录；在 backend 下启动则为 backend/logs）
+logging:
+  file:
+    path: logs
+
+server:
+  port: 8081
+  servlet:
+    context-path: /pet-ai-app
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+# OpenAPI 3 / Swagger UI（springdoc-openapi）
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  show-actuator: false

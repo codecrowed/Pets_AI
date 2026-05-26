@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>jiangxiaopeng.ai</groupId>
+        <artifactId>pets-ai-backend</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+
+    <artifactId>pets-ai-adapter-web</artifactId>
+    <packaging>jar</packaging>
+    <description>Web 适配器：REST Controller</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>jiangxiaopeng.ai</groupId>
+            <artifactId>pets-ai-application</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jiangxiaopeng.ai</groupId>
+            <artifactId>pets-ai-infrastructure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jiangxiaopeng.ai</groupId>
+            <artifactId>pets-ai-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jiangxiaopeng.ai</groupId>
+            <artifactId>pets-ai-types</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>${springdoc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+</project>
