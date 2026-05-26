@@ -83,7 +83,7 @@ class MessageApplicationServiceTest {
 
         @BeforeEach
         void setUp() {
-            cmd = new SendMessageCommand(CHAT_UID, USER_ID, CONTENT, null);
+            cmd = new SendMessageCommand(CHAT_UID, USER_ID, CONTENT, null, null);
         }
 
         private void stubCommonMocks() {
@@ -202,7 +202,7 @@ class MessageApplicationServiceTest {
         void ownershipViolation_throwsBusinessException() {
             when(sessionRepo.findByUid(CHAT_UID)).thenReturn(Optional.of(session));
 
-            SendMessageCommand wrongUserCmd = new SendMessageCommand(CHAT_UID, 999L, CONTENT, null);
+            SendMessageCommand wrongUserCmd = new SendMessageCommand(CHAT_UID, 999L, CONTENT, null, null);
 
             assertThatThrownBy(() -> service.sendMessageSync(wrongUserCmd))
                     .isInstanceOf(BusinessException.class)
