@@ -1,0 +1,68 @@
+# backend
+/backend/**/target/
+frontend-pet/logs/
+frontend-pet/!.mvn/wrapper/maven-wrapper.jar
+frontend-pet/!**/src/main/**/target/
+frontend-pet/!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+frontend-pet/.idea/modules.xml
+frontend-pet/.idea/jarRepositories.xml
+frontend-pet/.idea/compiler.xml
+frontend-pet/.idea/libraries/
+frontend-pet/*.iws
+frontend-pet/*.iml
+frontend-pet/*.ipr
+resources/application-dev.yml
+### Eclipse ###
+frontend-pet/.apt_generated
+frontend-pet/.classpath
+frontend-pet/.factorypath
+frontend-pet/.project
+frontend-pet/.settings
+frontend-pet/.springBeans
+frontend-pet/.sts4-cache
+
+### NetBeans ###
+frontend-pet/nbproject/private/
+frontend-pet/nbbuild/
+frontend-pet/dist/
+frontend-pet/nbdist/
+frontend-pet/.nb-gradle/
+frontend-pet/build/
+frontend-pet/!**/src/main/**/build/
+frontend-pet/!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Mac OS ###
+.DS_Store
+## claude
+frontend-pet/.claude/**
+frontend-pet/.idea/**
+frontend-pet/.trae/**
+
+# Logs
+frontend-pet/logs
+frontend-pet/*.log
+frontend-pet/npm-debug.log*
+frontend-pet/yarn-debug.log*
+frontend-pet/yarn-error.log*
+frontend-pet/pnpm-debug.log*
+frontend-pet/lerna-debug.log*
+
+frontend-pet/node_modules
+frontend-pet/dist
+frontend-pet/dist-ssr
+frontend-pet/*.local
+
+# frontend-pet
+
+frontend-pet/.idea
+frontend-pet/.DS_Store
+frontend-pet/*.suo
+frontend-pet/*.ntvs*
+frontend-pet/*.njsproj
+frontend-pet/*.sln
+frontend-pet/*.sw?
