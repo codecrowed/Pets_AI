@@ -66,3 +66,48 @@ frontend-pet/*.ntvs*
 frontend-pet/*.njsproj
 frontend-pet/*.sln
 frontend-pet/*.sw?
+
+
+backend/**/target
+backend/logs/
+backend/!.mvn/wrapper/maven-wrapper.jar
+backend/!**/src/main/**/target/
+backend/!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+backend/.idea/modules.xml
+backend/.idea/jarRepositories.xml
+backend/.idea/compiler.xml
+backend/.idea/libraries/
+backend/*.iws
+backend/*.iml
+backend/*.ipr
+backend/resources/application-dev.yml
+### Eclipse ###
+backend/.apt_generated
+backend/.classpath
+backend/.factorypath
+backend/.project
+backend/.settings
+backend/.springBeans
+backend/.sts4-cache
+
+### NetBeans ###
+backend//nbproject/private/
+backend//nbbuild/
+backend//dist/
+backend//nbdist/
+backend//.nb-gradle/
+backend/build/
+backend/!**/src/main/**/build/
+backend/!**/src/test/**/build/
+
+### VS Code ###
+backend/.vscode/
+
+### Mac OS ###
+backend/.DS_Store
+## claude
+backend/.claude/**
+backend/.idea/**
+backend/.trae/**
