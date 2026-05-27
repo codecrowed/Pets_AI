@@ -19,5 +19,14 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' },
+      ],
+      // Standard data-fetching effects intentionally call setState to track loading/error state;
+      // downgrade from error to warn instead of writing async wrappers around every effect.
+      'react-hooks/set-state-in-effect': 'warn',
+    },
   },
 ])

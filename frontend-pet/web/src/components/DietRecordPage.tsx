@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
+import { Button, Card, Input, Tabs, type TabItem } from "animal-island-ui";
 import { TopBar } from "./TopBar";
 import type { Pet } from "../lib/pet-types";
 import {
@@ -74,7 +75,7 @@ function formatDate(offset: number): string {
 
 export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet }: DietRecordPageProps) {
   const petName = activePet?.name || "宠物";
-  const petEmoji = activePet?.emoji === "AI" ? "🤖" : (activePet?.emoji || "🐕");
+  const petEmoji = activePet?.emoji === "AI" ? "🤖" : activePet?.emoji || "🐕";
   const petId = activePet?.id;
 
   const [dateOffset, setDateOffset] = useState(0);
@@ -130,15 +131,6 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
     }, 0);
   }, [pendingFoods]);
 
-  useEffect(() => {
-    if (!petId) return;
-    loadData();
-  }, [petId, currentDate]);
-
-  useEffect(() => {
-    loadFrequentFoods();
-  }, []);
-
   const loadData = useCallback(async () => {
     if (!petId) return;
     setLoading(true);
@@ -153,7 +145,7 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
       setWeeklyData(weekly);
       setWaterStats(water);
       setContinuousDays(days);
-      
+
       const groups: MealGroup[] = stats.mealGroups.map((g) => ({
         type: g.mealType.toLowerCase() as MealGroup["type"],
         label: g.mealTypeLabel,
@@ -167,7 +159,7 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
           calories: item.estimatedKcal ?? 0,
         })),
       }));
-      
+
       const defaultTypes: MealGroup["type"][] = ["breakfast", "lunch", "dinner"];
       for (const type of defaultTypes) {
         if (!groups.find((g) => g.type === type)) {
@@ -196,6 +188,15 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
       console.error("Failed to load frequent foods", err);
     }
   }, []);
+
+  useEffect(() => {
+    if (!petId) return;
+    loadData();
+  }, [petId, currentDate, loadData]);
+
+  useEffect(() => {
+    loadFrequentFoods();
+  }, [loadFrequentFoods]);
 
   const handleSearchFoods = useCallback(async (keyword: string) => {
     setSearchKeyword(keyword);
@@ -264,9 +265,7 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
   }, []);
 
   const updatePendingFoodWeight = useCallback((id: string, weight: string) => {
-    setPendingFoods((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, weight } : item))
-    );
+    setPendingFoods((prev) => prev.map((item) => (item.id === id ? { ...item, weight } : item)));
   }, []);
 
   const saveFoodRecord = useCallback(async () => {
@@ -320,7 +319,18 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
       console.error("Failed to save diet record", err);
       showToast("保存失败，请重试", "warning");
     }
-  }, [petId, pendingFoods, foodName, foodAmount, foodTime, selectedMealType, selectedFood, currentDate, loadData, loadFrequentFoods]);
+  }, [
+    petId,
+    pendingFoods,
+    foodName,
+    foodAmount,
+    foodTime,
+    selectedMealType,
+    selectedFood,
+    currentDate,
+    loadData,
+    loadFrequentFoods,
+  ]);
 
   const saveWaterRecord = useCallback(async () => {
     if (!petId) {
@@ -351,27 +361,34 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
     }
   }, [petId, waterAmount, waterTime, currentDate, loadData]);
 
-  const handleDeleteWaterRecord = useCallback(async (recordId: number) => {
-    try {
-      await deleteWaterRecord(recordId);
-      showToast("已删除饮水记录", "success");
-      loadData();
-    } catch (err) {
-      console.error("Failed to delete water record", err);
-      showToast("删除失败", "warning");
-    }
-  }, [loadData]);
+  const handleDeleteWaterRecord = useCallback(
+    async (recordId: number) => {
+      try {
+        await deleteWaterRecord(recordId);
+        showToast("已删除饮水记录", "success");
+        loadData();
+      } catch (err) {
+        console.error("Failed to delete water record", err);
+        showToast("删除失败", "warning");
+      }
+    },
+    [loadData]
+  );
 
-  const handleDeleteRecord = useCallback(async (recordId: number) => {
-    try {
-      await deleteDietRecord(recordId);
-      showToast("已删除记录", "success");
-      loadData();
-    } catch (err) {
-      console.error("Failed to delete record", err);
-      showToast("删除失败", "warning");
-    }
-  }, [loadData]);
+  const _handleDeleteRecord = useCallback(
+    async (recordId: number) => {
+      try {
+        await deleteDietRecord(recordId);
+        showToast("已删除记录", "success");
+        loadData();
+      } catch (err) {
+        console.error("Failed to delete record", err);
+        showToast("删除失败", "warning");
+      }
+    },
+    [loadData]
+  );
+  void _handleDeleteRecord;
 
   const handleAiAnalysis = useCallback(async () => {
     if (!petId) {
@@ -400,6 +417,20 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
     return group.items.reduce((sum, item) => sum + item.calories, 0);
   }, []);
 
+  const mealTypeTabItems = useMemo<TabItem[]>(
+    () =>
+      mealTypeOptions.map((opt) => ({
+        key: opt.type,
+        label: (
+          <span>
+            {opt.icon} {opt.label}
+          </span>
+        ),
+        children: null,
+      })),
+    []
+  );
+
   return (
     <>
       <TopBar
@@ -417,23 +448,25 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
           <div className="diet-sidebar">
             <div className="ds-header">
               <span className="ds-title">饮食记录</span>
-              <div className="ds-pet-tag">{petEmoji} {petName}</div>
+              <div className="ds-pet-tag">
+                {petEmoji} {petName}
+              </div>
             </div>
             <div className="diet-date-nav">
-              <button className="ddn-btn" onClick={() => changeDate(-1)} type="button">
+              <Button type="text" size="small" className="ddn-btn" onClick={() => changeDate(-1)} aria-label="前一天">
                 ‹
-              </button>
+              </Button>
               <div>
                 <div className="ddn-date">{formatDate(dateOffset)}</div>
-                <button className="ddn-today-btn" onClick={goToday} type="button">
+                <Button type="default" size="small" className="ddn-today-btn" onClick={goToday}>
                   今天
-                </button>
+                </Button>
               </div>
-              <button className="ddn-btn" onClick={() => changeDate(1)} type="button">
+              <Button type="text" size="small" className="ddn-btn" onClick={() => changeDate(1)} aria-label="后一天">
                 ›
-              </button>
+              </Button>
             </div>
-            <div className="daily-summary">
+            <Card className="daily-summary">
               <div className="ds-summary-title">📊 今日营养摘要</div>
               <div className="ds-macro-row">
                 <div className="ds-macro">
@@ -459,19 +492,16 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                   <span>{progressPercent}%</span>
                 </div>
                 <div className="ds-bar-track">
-                  <div
-                    className="ds-bar-fill"
-                    style={{ width: `${progressPercent}%` }}
-                  />
+                  <div className="ds-bar-fill" style={{ width: `${progressPercent}%` }} />
                 </div>
               </div>
-            </div>
+            </Card>
             <div className="meal-list">
               {mealGroups.map((group) => (
                 <div className="meal-group" key={group.type}>
                   <div className="meal-group-header">
                     <div className="mgh-title">
-                      <span>{group.icon}</span>
+                      <span aria-hidden>{group.icon}</span>
                       {group.label}
                     </div>
                     <span className="mgh-cal">{getMealCalories(group)} kcal</span>
@@ -483,7 +513,9 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                       onClick={() => setActiveMealItem(item.id)}
                       type="button"
                     >
-                      <span className="mi-icon">{item.icon}</span>
+                      <span className="mi-icon" aria-hidden>
+                        {item.icon}
+                      </span>
                       <div className="mi-info">
                         <div className="mi-name">{item.name}</div>
                         <div className="mi-detail">
@@ -493,13 +525,15 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                       <span className="mi-cal">{item.calories} kcal</span>
                     </button>
                   ))}
-                  <button
+                  <Button
+                    type="dashed"
+                    size="small"
+                    block
                     className={`meal-add-btn${group.items.length === 0 ? " highlight" : ""}`}
                     onClick={() => openAddFood(group.type)}
-                    type="button"
                   >
                     ＋ 添加{group.label}记录
-                  </button>
+                  </Button>
                 </div>
               ))}
             </div>
@@ -508,41 +542,42 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
           <div className="diet-main">
             <div className="diet-main-title">
               📊 本周饮食概览
-              <button
-                className="btn btn-outline btn-sm"
-                style={{ marginLeft: "auto" }}
-                onClick={() => openAddFood("dinner")}
-                type="button"
-              >
+              <Button type="default" size="small" style={{ marginLeft: "auto" }} onClick={() => openAddFood("dinner")}>
                 ＋ 快速添加
-              </button>
+              </Button>
             </div>
 
             <div className="diet-stats-grid">
-              <div className="stat-card">
-                <div className="sc-icon">🔥</div>
+              <Card className="stat-card" color="app-orange">
+                <div className="sc-icon" aria-hidden>
+                  🔥
+                </div>
                 <div>
                   <span className="sc-val">{totalCalories}</span>
                   <span className="sc-unit">kcal</span>
                 </div>
                 <div className="sc-lbl">今日已摄入</div>
                 <div className="sc-trend up">↑ 目标达成{progressPercent}%</div>
-              </div>
-              <div className="stat-card">
-                <div className="sc-icon">🥩</div>
+              </Card>
+              <Card className="stat-card" color="app-pink">
+                <div className="sc-icon" aria-hidden>
+                  🥩
+                </div>
                 <div>
                   <span className="sc-val">{Math.round(dailyStats?.proteinG ?? 0)}</span>
                   <span className="sc-unit">g</span>
                 </div>
                 <div className="sc-lbl">蛋白质</div>
                 <div className="sc-trend up">↑ 优质蛋白</div>
-              </div>
-              <button
+              </Card>
+              <Card
                 className="stat-card stat-card-clickable"
+                color="app-blue"
                 onClick={() => setShowWaterForm(!showWaterForm)}
-                type="button"
               >
-                <div className="sc-icon">💧</div>
+                <div className="sc-icon" aria-hidden>
+                  💧
+                </div>
                 <div>
                   <span className="sc-val">{waterStats?.totalWaterMl ?? 0}</span>
                   <span className="sc-unit">ml</span>
@@ -551,36 +586,39 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                 <div className={`sc-trend ${(waterStats?.totalWaterMl ?? 0) >= 400 ? "up" : "down"}`}>
                   {(waterStats?.totalWaterMl ?? 0) >= 400 ? "↑ 已达标" : "↓ 点击添加"}
                 </div>
-              </button>
-              <div className="stat-card">
-                <div className="sc-icon">📈</div>
+              </Card>
+              <Card className="stat-card" color="app-green">
+                <div className="sc-icon" aria-hidden>
+                  📈
+                </div>
                 <div>
                   <span className="sc-val">{continuousDays?.continuousDays ?? 0}</span>
                   <span className="sc-unit">天</span>
                 </div>
                 <div className="sc-lbl">连续记录</div>
                 <div className="sc-trend up">↑ {continuousDays?.message ?? "坚持记录中"}</div>
-              </div>
+              </Card>
             </div>
 
             {showWaterForm && (
-              <div className="water-form-card">
+              <Card className="water-form-card" color="app-blue">
                 <div className="wfc-header">
                   <span className="wfc-title">💧 添加饮水记录</span>
-                  <button
+                  <Button
+                    type="text"
+                    size="small"
                     className="wfc-close"
                     onClick={() => setShowWaterForm(false)}
-                    type="button"
+                    aria-label="关闭"
                   >
                     ✕
-                  </button>
+                  </Button>
                 </div>
                 <div className="wfc-body">
                   <div className="wfc-field">
                     <label className="wfc-label">饮水量 (ml)</label>
                     <div className="wfc-input-group">
-                      <input
-                        className="wfc-input"
+                      <Input
                         type="number"
                         value={waterAmount}
                         min={0}
@@ -589,14 +627,15 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                       />
                       <div className="wfc-quick-btns">
                         {[50, 100, 150, 200].map((amt) => (
-                          <button
+                          <Button
                             key={amt}
-                            className={`wfc-quick-btn${waterAmount === String(amt) ? " active" : ""}`}
+                            type={waterAmount === String(amt) ? "primary" : "default"}
+                            size="small"
+                            className="wfc-quick-btn"
                             onClick={() => setWaterAmount(String(amt))}
-                            type="button"
                           >
                             {amt}ml
-                          </button>
+                          </Button>
                         ))}
                       </div>
                     </div>
@@ -610,13 +649,9 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                       onChange={(e) => setWaterTime(e.target.value)}
                     />
                   </div>
-                  <button
-                    className="btn btn-primary wfc-save-btn"
-                    onClick={saveWaterRecord}
-                    type="button"
-                  >
+                  <Button type="primary" block className="wfc-save-btn" onClick={saveWaterRecord}>
                     💧 保存饮水记录
-                  </button>
+                  </Button>
                 </div>
                 {waterStats && waterStats.records.length > 0 && (
                   <div className="wfc-records">
@@ -630,57 +665,51 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                             minute: "2-digit",
                           })}
                         </span>
-                        <button
+                        <Button
+                          type="text"
+                          size="small"
                           className="wfc-record-delete"
                           onClick={() => handleDeleteWaterRecord(record.id)}
-                          type="button"
+                          aria-label="删除"
                           title="删除"
                         >
                           ✕
-                        </button>
+                        </Button>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
+              </Card>
             )}
 
-            <div className="add-food-card" id="addFoodCard">
+            <Card className="add-food-card" id="addFoodCard">
               <div className="afc-title">
                 🍽️ 添加饮食记录 ·{" "}
-                <span style={{ color: "var(--c-primary)" }}>
+                <span style={{ color: "var(--c-primary-dark)" }}>
                   {mealTypeOptions.find((m) => m.type === selectedMealType)?.label}
                 </span>
               </div>
 
-              <div className="meal-type-tabs">
-                {mealTypeOptions.map((opt) => (
-                  <button
-                    key={opt.type}
-                    className={`mtt-btn${selectedMealType === opt.type ? " active" : ""}`}
-                    onClick={() => selectMealType(opt.type)}
-                    type="button"
-                  >
-                    {opt.icon} {opt.label}
-                  </button>
-                ))}
-              </div>
+              <Tabs
+                items={mealTypeTabItems}
+                activeKey={selectedMealType}
+                onChange={(key) => selectMealType(key as MealGroup["type"])}
+                className="meal-type-tabs"
+              />
 
               <div className="food-search-row">
-                <input
-                  className="food-search-input"
+                <Input
                   type="text"
-                  placeholder="🔍 搜索食物名称（主粮、肉类、蔬菜...）"
+                  placeholder="搜索食物名称（主粮、肉类、蔬菜...）"
+                  prefix={<span aria-hidden>🔍</span>}
+                  allowClear
                   value={searchKeyword}
                   onChange={(e) => handleSearchFoods(e.target.value)}
+                  onClear={() => handleSearchFoods("")}
                 />
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => showToast("📷 扫条码功能开发中", "warning")}
-                  type="button"
-                >
+                <Button type="default" size="small" onClick={() => showToast("📷 扫条码功能开发中", "warning")}>
                   📷 扫码
-                </button>
+                </Button>
               </div>
 
               {(searchResults.length > 0 || (hasSearched && searchKeyword.trim())) && (
@@ -693,7 +722,9 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                         onClick={() => selectFood(food)}
                         type="button"
                       >
-                        <span className="fsi-icon">{food.icon || "🍽️"}</span>
+                        <span className="fsi-icon" aria-hidden>
+                          {food.icon || "🍽️"}
+                        </span>
                         <div className="fsi-info">
                           <div className="fsi-name">{food.name}</div>
                           <div className="fsi-detail">
@@ -707,7 +738,7 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                     ))
                   ) : (
                     <div className="food-search-empty">
-                      <span>🔍</span> 未找到"{searchKeyword}"相关的食物
+                      <span aria-hidden>🔍</span> 未找到&ldquo;{searchKeyword}&rdquo;相关的食物
                     </div>
                   )}
                 </div>
@@ -716,37 +747,38 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
               <div className="food-quick-chips">
                 <div className="fqc-label">常用食物：</div>
                 {frequentFoods.slice(0, 8).map((food) => (
-                  <button
+                  <Button
                     key={food.id}
-                    className={`fqc-chip${selectedFood?.id === food.id ? " selected" : ""}`}
+                    type={selectedFood?.id === food.id ? "primary" : "default"}
+                    size="small"
+                    className="fqc-chip"
                     onClick={() => selectFood(food)}
-                    type="button"
                   >
                     {food.icon || "🍽️"} {food.name}
-                  </button>
+                  </Button>
                 ))}
               </div>
 
               <div className="food-detail-row">
                 <div className="fdr-field">
                   <div className="fdr-label">食物名称</div>
-                  <input
-                    className="fdr-input fdr-input-readonly"
+                  <Input
                     type="text"
                     value={foodName}
                     readOnly
                     placeholder="请从上方搜索或选择食物"
+                    className="fdr-input-readonly"
                   />
                 </div>
                 <div className="fdr-field">
                   <div className="fdr-label">重量</div>
-                  <input
-                    className="fdr-input"
+                  <Input
                     type="number"
                     value={foodAmount}
                     min={0}
                     onChange={(e) => setFoodAmount(e.target.value)}
                     placeholder="输入重量"
+                    suffix="g"
                   />
                   <div className="fdr-unit">单位：克 (g)</div>
                 </div>
@@ -766,14 +798,16 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
               </div>
 
               {pendingFoods.length > 0 && (
-                <div className="pending-foods-list">
+                <Card className="pending-foods-list" color="app-yellow">
                   <div className="pfl-header">
                     <span>📋 待保存的食物列表 ({pendingFoods.length})</span>
                     <span className="pfl-total">共 {pendingTotalCalories} kcal</span>
                   </div>
                   {pendingFoods.map((item) => (
                     <div key={item.id} className="pending-food-item">
-                      <span className="pfi-icon">{item.food?.icon || "🍽️"}</span>
+                      <span className="pfi-icon" aria-hidden>
+                        {item.food?.icon || "🍽️"}
+                      </span>
                       <span className="pfi-name">{item.foodName}</span>
                       <input
                         className="pfi-weight"
@@ -784,48 +818,44 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                       />
                       <span className="pfi-unit">g</span>
                       <span className="pfi-time">{item.time}</span>
-                      <button
+                      <Button
+                        type="text"
+                        size="small"
                         className="pfi-remove"
                         onClick={() => removePendingFood(item.id)}
-                        type="button"
+                        aria-label="移除"
                         title="移除"
                       >
                         ✕
-                      </button>
+                      </Button>
                     </div>
                   ))}
-                </div>
+                </Card>
               )}
 
               <div className="form-actions">
-                <button
-                  className="btn btn-add-list"
+                <Button
+                  type="dashed"
+                  className="btn-add-list"
                   onClick={addToPendingFoods}
-                  type="button"
                   disabled={!foodName.trim()}
                 >
                   ＋ 添加到列表
-                </button>
-                <button
-                  className="btn btn-primary"
+                </Button>
+                <Button
+                  type="primary"
                   onClick={saveFoodRecord}
-                  type="button"
                   disabled={loading || (pendingFoods.length === 0 && !foodName.trim())}
                 >
                   ✓ 保存{pendingFoods.length > 0 ? ` ${pendingFoods.length + (foodName.trim() ? 1 : 0)} 条` : ""}记录
-                </button>
-                <button
-                  className="btn btn-outline"
-                  onClick={handleAiAnalysis}
-                  type="button"
-                  disabled={analyzing}
-                >
-                  {analyzing ? "🤖 分析中..." : "🤖 AI 营养分析"}
-                </button>
+                </Button>
+                <Button type="default" onClick={handleAiAnalysis} disabled={analyzing} loading={analyzing}>
+                  {analyzing ? "分析中…" : "🤖 AI 营养分析"}
+                </Button>
               </div>
 
               {aiAnalysis && (
-                <div className="ai-analysis-result">
+                <Card className="ai-analysis-result" color="purple">
                   <div className="aar-title">🤖 AI 营养分析结果</div>
                   <div className="aar-summary">{aiAnalysis.summary}</div>
                   {aiAnalysis.suggestions.length > 0 && (
@@ -846,11 +876,11 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                       <span className="aar-tag">综合: {aiAnalysis.nutritionAnalysis.overallStatus}</span>
                     </div>
                   )}
-                </div>
+                </Card>
               )}
-            </div>
+            </Card>
 
-            <div className="week-chart-card">
+            <Card className="week-chart-card">
               <div className="wcc-header">
                 <div className="wcc-title">📅 近7天热量趋势</div>
                 <div className="wcc-legend">
@@ -890,7 +920,7 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
                   );
                 })}
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       </div>

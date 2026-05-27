@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
+import { Button } from "animal-island-ui";
 import type { Pet } from "../lib/pet-types";
 import { showToast } from "../lib/pet-types";
 
@@ -36,14 +37,17 @@ export function TopBar({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showPetSwitcher]);
 
-  const handleSwitchPet = useCallback((petId: number) => {
-    onSwitchPet(petId);
-    setShowPetSwitcher(false);
-    const selectedPet = pets.find((p) => p.id === petId);
-    if (selectedPet) {
-      showToast(`✅ 已切换到 ${selectedPet.name}`, "success");
-    }
-  }, [pets, onSwitchPet]);
+  const handleSwitchPet = useCallback(
+    (petId: number) => {
+      onSwitchPet(petId);
+      setShowPetSwitcher(false);
+      const selectedPet = pets.find((p) => p.id === petId);
+      if (selectedPet) {
+        showToast(`✅ 已切换到 ${selectedPet.name}`, "success");
+      }
+    },
+    [pets, onSwitchPet]
+  );
 
   const handleAddPet = useCallback(() => {
     setShowPetSwitcher(false);
@@ -52,42 +56,62 @@ export function TopBar({
 
   return (
     <header className="topbar">
-      <button className="topbar-menu-btn" onClick={onMenuClick} type="button">
+      <Button
+        type="text"
+        size="small"
+        className="topbar-menu-btn"
+        onClick={onMenuClick}
+        aria-label="打开侧边栏"
+      >
         ☰
-      </button>
+      </Button>
+
       <div className="topbar-title">
         {title} {subtitle && <span>{subtitle}</span>}
       </div>
+
       <div className="topbar-actions">
         <div className="pet-switcher-container" ref={petSwitcherRef}>
-          <div
+          <button
+            type="button"
             className="pet-quick-select"
             onClick={() => setShowPetSwitcher((prev) => !prev)}
+            aria-haspopup="listbox"
+            aria-expanded={showPetSwitcher}
           >
-            <div className="pqs-avatar">
+            <div className="pqs-avatar" aria-hidden>
               {activePet?.emoji === "AI" ? "🤖" : activePet?.emoji || "🐕"}
             </div>
             <span className="pqs-name">{activePet?.name || "选择宠物"}</span>
-            <span className="pqs-arrow">{showPetSwitcher ? "▴" : "▾"}</span>
-          </div>
+            <span className="pqs-arrow" aria-hidden>
+              {showPetSwitcher ? "▴" : "▾"}
+            </span>
+          </button>
+
           {showPetSwitcher && (
-            <div className="pet-switcher-dropdown">
+            <div className="pet-switcher-dropdown" role="listbox">
               <div className="psd-header">切换当前宠物</div>
               {pets.map((pet) => (
                 <button
                   key={pet.id}
                   type="button"
+                  role="option"
+                  aria-selected={pet.isActive}
                   className={`psd-item${pet.isActive ? " active" : ""}`}
                   onClick={() => handleSwitchPet(pet.id)}
                 >
-                  <span className="psd-avatar">
+                  <span className="psd-avatar" aria-hidden>
                     {pet.emoji === "AI" ? "🤖" : pet.emoji}
                   </span>
                   <div className="psd-info">
                     <span className="psd-name">{pet.name}</span>
                     <span className="psd-breed">{pet.breed || "未设置品种"}</span>
                   </div>
-                  {pet.isActive && <span className="psd-check">✓</span>}
+                  {pet.isActive && (
+                    <span className="psd-check" aria-hidden>
+                      ✓
+                    </span>
+                  )}
                 </button>
               ))}
               <div className="psd-divider" />
@@ -96,20 +120,25 @@ export function TopBar({
                 className="psd-item psd-add"
                 onClick={handleAddPet}
               >
-                <span className="psd-avatar">＋</span>
+                <span className="psd-avatar" aria-hidden>
+                  ＋
+                </span>
                 <span className="psd-name">添加新宠物</span>
               </button>
             </div>
           )}
         </div>
-        <button
+
+        <Button
+          type="text"
+          size="small"
           className="topbar-btn"
-          title="通知"
           onClick={() => showToast("🔔 暂无新通知", "success")}
-          type="button"
+          aria-label="通知"
+          title="通知"
         >
           🔔
-        </button>
+        </Button>
       </div>
     </header>
   );

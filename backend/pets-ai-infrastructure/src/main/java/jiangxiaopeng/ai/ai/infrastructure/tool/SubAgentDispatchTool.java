@@ -3,6 +3,8 @@ package jiangxiaopeng.ai.ai.infrastructure.tool;
 import java.util.Map;
 import java.util.Objects;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
@@ -27,6 +29,8 @@ import reactor.core.publisher.Flux;
 @Log4j2
 public class SubAgentDispatchTool {
 
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     private final PetAiAgentRuntimeAssembler agentRuntimeAssembler;
     private final PetAiClientAssemblyService clientAssembly;
     private final SseEmitterHelper sseEmitterHelper;
@@ -46,13 +50,12 @@ public class SubAgentDispatchTool {
             returnDirect = true
     )
     public String dispatchSubAgent(
-            SubAgentDispatchParam subAgentDispatchParam,
+            @ToolParam(description = "子 Agent 的业务 agent_id") long targetAgentId,
+            @ToolParam(description = "用户意图") String userInstant,
+            @ToolParam(description = "用户原始消息") String userMessage,
+            @ToolParam(description = "槽位信息 JSON 字符串") String slotJson,
             ToolContext toolContext) {
-        log.info("主Agent开始为子Agent分配任务: {}", subAgentDispatchParam);
-        long targetAgentId = subAgentDispatchParam.targetAgentId();
-        String userInstant = subAgentDispatchParam.userInstant();
-        String userMessage = subAgentDispatchParam.userMessage();
-        String slotJson = subAgentDispatchParam.slotJson();
+        log.info("主Agent开始为子Agent分配任务: targetAgentId={}, userInstant={}", targetAgentId, userInstant);
 
         Map<String, Object> toolCtx = toolContext != null ? toolContext.getContext() : Map.of();
         AgentToolContext agentToolContext = (AgentToolContext) toolCtx.get(AgentToolContext.CONTEXT_KEY);
@@ -111,13 +114,14 @@ public class SubAgentDispatchTool {
     }
 
     private String executeSyncMode(
-            ChatClient client, 
-            PetAiAgentRuntime runtime, 
-            String userPrompt, 
+            ChatClient client,
+            PetAiAgentRuntime runtime,
+            String userPrompt,
             ToolContext toolContext) {
+        Map<String, Object> ctx = toolContext != null ? toolContext.getContext() : Map.of();
         return client.prompt(runtime.processedSystemPrompt())
                 .user(userPrompt)
-                .toolContext(toolContext.getContext())
+                .toolContext(ctx)
                 .call()
                 .content();
     }
@@ -126,9 +130,22 @@ public class SubAgentDispatchTool {
         return "用户意图：" + userInstant + "\n用户原始消息：" + userMessage + "\n槽位信息：" + slotJson;
     }
 
+    /** 供测试或手动解析；工具方法使用扁平 {@link ToolParam} 入参。 */
     public record SubAgentDispatchParam(
-        @ToolParam(description = "子 Agent 的业务 agent_id") long targetAgentId, 
-        @ToolParam(description = "用户意图") String userInstant, 
-        @ToolParam(description = "用户原始消息") String userMessage, 
-        @ToolParam(description = "槽位信息") String slotJson) {}
+            long targetAgentId,
+            String userInstant,
+            String userMessage,
+            String slotJson) {
+
+        public static SubAgentDispatchParam fromJson(String json) {
+            if (json == null || json.isBlank()) {
+                throw new IllegalArgumentException("dispatchSubAgent 参数 JSON 为空");
+            }
+            try {
+                return OBJECT_MAPPER.readValue(json.trim(), SubAgentDispatchParam.class);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("无法解析 dispatchSubAgent 参数: " + json, e);
+            }
+        }
+    }
 }

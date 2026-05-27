@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Button, Card, Input } from "animal-island-ui";
 import {
   createChat,
   listChats,
@@ -294,30 +295,38 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
       />
 
       <div className="page-content">
-        <button
-          type="button"
+        <Button
+          type="default"
+          size="small"
           className="topbar-history-btn chat-history-toggle"
           onClick={() => setHistoryOpen((o) => !o)}
           aria-label="对话历史"
         >
           📜 历史
-        </button>
+        </Button>
         <div className="page active" id="page-chat">
           <div className="chat-history-overlay" data-open={historyOpen} onClick={() => setHistoryOpen(false)} />
           <div className={`chat-layout${historyOpen ? " history-open" : ""}`}>
             <div className={`chat-history${historyOpen ? " open" : ""}`} id="chatHistory">
               <div className="ch-header">
                 <span className="ch-title">对话历史</span>
-                <button type="button" className="ch-new-btn" onClick={() => void handleNewChat()}>
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => void handleNewChat()}
+                >
                   ＋ 新对话
-                </button>
+                </Button>
               </div>
               <div className="ch-search">
-                <input
+                <Input
                   type="search"
-                  placeholder="🔍 搜索历史…"
+                  placeholder="搜索历史…"
+                  prefix={<span aria-hidden>🔍</span>}
+                  allowClear
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
+                  onClear={() => setSearchInput("")}
                   autoComplete="off"
                 />
               </div>
@@ -335,7 +344,9 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                         className={`ch-item${currentChatId === c.id ? " active" : ""}`}
                         onClick={() => handleSelectChat(c.id)}
                       >
-                        <span className="ch-item-icon">🤖</span>
+                        <span className="ch-item-icon" aria-hidden>
+                          🤖
+                        </span>
                         <div className="ch-item-body">
                           <div className="ch-item-title">{c.title || "未命名对话"}</div>
                         </div>
@@ -353,7 +364,9 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
               <div className="chat-messages" id="chatMessages">
                 {showWelcome && rows.length === 0 && streamingText === null && (
                   <div className="chat-welcome" id="chatWelcome">
-                    <div className="cw-avatar">🐾</div>
+                    <div className="cw-avatar" aria-hidden>
+                      🐾
+                    </div>
                     <div className="cw-title">
                       你好！我是 <span>PawPal AI</span>
                     </div>
@@ -364,9 +377,15 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                     </div>
                     <div className="cw-suggestions">
                       {SUGGESTIONS.map((s) => (
-                        <button key={s} type="button" className="cw-sug-btn" onClick={() => quickAsk(s)}>
+                        <Button
+                          key={s}
+                          type="default"
+                          size="small"
+                          className="cw-sug-btn"
+                          onClick={() => quickAsk(s)}
+                        >
                           {s}
-                        </button>
+                        </Button>
                       ))}
                     </div>
                   </div>
@@ -377,23 +396,27 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                 {rows.map((row) =>
                   row.kind === "file" ? (
                     <div key={row.id} className="msg-row user">
-                      <div className="msg-avatar user">😊</div>
+                      <div className="msg-avatar user" aria-hidden>
+                        😊
+                      </div>
                       <div>
-                        <div className="file-bubble">
-                          <div className="file-icon-box" style={{ background: "#fff3e0" }}>
+                        <Card className="file-bubble">
+                          <div className="file-icon-box" aria-hidden>
                             📄
                           </div>
                           <div>
                             <div className="file-name">{row.name}</div>
                             <div className="file-size">待发送</div>
                           </div>
-                        </div>
+                        </Card>
                         <div className="msg-time">{row.time}</div>
                       </div>
                     </div>
                   ) : (
                     <div key={row.id} className={`msg-row ${row.role}`}>
-                      <div className={`msg-avatar ${row.role}`}>{row.role === "ai" ? "🐾" : "😊"}</div>
+                      <div className={`msg-avatar ${row.role}`} aria-hidden>
+                        {row.role === "ai" ? "🐾" : "😊"}
+                      </div>
                       <div>
                         <div className="msg-bubble">
                           <MarkdownMessage
@@ -409,7 +432,9 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
 
                 {streamingText !== null && (
                   <div className="msg-row ai">
-                    <div className="msg-avatar ai">🐾</div>
+                    <div className="msg-avatar ai" aria-hidden>
+                      🐾
+                    </div>
                     <div>
                       <div className="msg-bubble">
                         <MarkdownMessage content={streamingText} variant="ai" />
@@ -420,9 +445,11 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
 
                 {sending && streamingText === null && (
                   <div className="msg-row ai" id="typingRow">
-                    <div className="msg-avatar ai">🐾</div>
+                    <div className="msg-avatar ai" aria-hidden>
+                      🐾
+                    </div>
                     <div className="msg-bubble" style={{ padding: 0 }}>
-                      <div className="typing-indicator">
+                      <div className="typing-indicator" aria-label="AI 正在思考">
                         <div className="typing-dot" />
                         <div className="typing-dot" />
                         <div className="typing-dot" />
@@ -451,7 +478,7 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                     className="chat-textarea"
                     id="chatInput"
                     rows={1}
-                    placeholder=""
+                    placeholder="说点什么吧…"
                     autoComplete="off"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
@@ -479,39 +506,41 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                     >
                       🎙️
                     </button>
-                    <button
-                      type="button"
+                    <Button
+                      type="primary"
+                      size="small"
                       className="send-btn"
-                      id="sendBtn"
                       title="发送"
                       onClick={() => void send()}
                       disabled={sending || (!input.trim() && pendingFiles.length === 0)}
                     >
-                      <svg viewBox="0 0 24 24" width="16" height="16" fill="white" aria-hidden>
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden>
                         <path d="M2 21l21-9L2 3v7l15 2-15 2v7z" />
                       </svg>
-                    </button>
+                    </Button>
                   </div>
                 </div>
                 <div className="chat-quick-actions" aria-label="快捷功能">
-                  <button type="button" className="chat-quick-chip" onClick={() => chatQuickAction("profile")}>
-                    添加档案
-                  </button>
-                  <button type="button" className="chat-quick-chip" onClick={() => chatQuickAction("case")}>
-                    病例分析
-                  </button>
-                  <button type="button" className="chat-quick-chip" onClick={() => chatQuickAction("calorie")}>
-                    热量分析
-                  </button>
-                  <button type="button" className="chat-quick-chip" onClick={() => chatQuickAction("diet")}>
-                    记录饮食
-                  </button>
-                  <button type="button" className="chat-quick-chip" onClick={() => chatQuickAction("avatar")}>
-                    萌宠头像
-                  </button>
-                  <button type="button" className="chat-quick-chip" onClick={() => chatQuickAction("more")}>
-                    更多
-                  </button>
+                  {(
+                    [
+                      { key: "profile", label: "添加档案" },
+                      { key: "case", label: "病例分析" },
+                      { key: "calorie", label: "热量分析" },
+                      { key: "diet", label: "记录饮食" },
+                      { key: "avatar", label: "萌宠头像" },
+                      { key: "more", label: "更多" },
+                    ] as const
+                  ).map(({ key, label }) => (
+                    <Button
+                      key={key}
+                      type="default"
+                      size="small"
+                      className="chat-quick-chip"
+                      onClick={() => chatQuickAction(key)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
                 </div>
               </div>
             </div>

@@ -1,11 +1,38 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, lazy, Suspense } from "react";
+import { Card, Cursor } from "animal-island-ui";
 import { AppShell } from "./components/AppShell";
-import { AskAiPage } from "./components/AskAiPage";
-import { PetProfilePage } from "./components/PetProfilePage";
-import { DietRecordPage } from "./components/DietRecordPage";
 import { LoginPage } from "./components/LoginPage";
 import { logoutRemote, readStoredUser, type UserInfo } from "./lib/auth-api";
 import { type Pet, showToast as emitToast } from "./lib/pet-types";
+
+const AskAiPage = lazy(() =>
+  import("./components/AskAiPage").then((m) => ({ default: m.AskAiPage }))
+);
+const PetProfilePage = lazy(() =>
+  import("./components/PetProfilePage").then((m) => ({ default: m.PetProfilePage }))
+);
+const DietRecordPage = lazy(() =>
+  import("./components/DietRecordPage").then((m) => ({ default: m.DietRecordPage }))
+);
+
+function PageFallback() {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "48px 24px",
+        color: "var(--c-text-3)",
+        fontSize: 14,
+      }}
+      role="status"
+      aria-live="polite"
+    >
+      <span>🐾 加载中…</span>
+    </div>
+  );
+}
 import {
   listPets,
   createPet,
@@ -48,11 +75,7 @@ export default function App() {
   }, [toast]);
 
   useEffect(() => {
-    if (!user) {
-      setPets([]);
-      clearCurrentPetId();
-      return;
-    }
+    if (!user) return;
     setPetsLoading(true);
     listPets()
       .then((summaries) => {
@@ -77,6 +100,7 @@ export default function App() {
   const handleLogout = useCallback(async () => {
     await logoutRemote();
     clearCurrentPetId();
+    setPets([]);
     setUser(null);
     setCurrentPage("chat");
     setToast({ msg: "👋 已退出登录", type: "success" });
@@ -148,8 +172,10 @@ export default function App() {
         <LoginPage onSuccess={(payload) => setUser(payload.user)} />
         <div className="toast-wrap" aria-live="polite">
           {toast && (
-            <div className={`toast show ${toast.type}`} role="status">
-              {toast.msg}
+            <div className="toast show" role="status">
+              <Card color={toast.type === "success" ? "app-green" : "app-yellow"}>
+                {toast.msg}
+              </Card>
             </div>
           )}
         </div>
@@ -205,7 +231,7 @@ export default function App() {
   };
 
   return (
-    <>
+    <Cursor>
       <AppShell
         sidebarOpen={sidebarOpen}
         onCloseSidebar={() => setSidebarOpen(false)}
@@ -215,15 +241,17 @@ export default function App() {
         onPageChange={handlePageChange}
         petCount={pets.length}
       >
-        {renderPage()}
+        <Suspense fallback={<PageFallback />}>{renderPage()}</Suspense>
       </AppShell>
       <div className="toast-wrap" aria-live="polite">
         {toast && (
-          <div className={`toast show ${toast.type}`} role="status">
-            {toast.msg}
+          <div className="toast show" role="status">
+            <Card color={toast.type === "success" ? "app-green" : "app-yellow"}>
+              {toast.msg}
+            </Card>
           </div>
         )}
       </div>
-    </>
+    </Cursor>
   );
 }

@@ -2,23 +2,25 @@
 
 ## 技术栈
 
-| 类别 | 技术 | 版本 |
-|------|------|------|
-| 语言 | Java | 17 |
-| 框架 | Spring Boot | 3.4.1 |
-| 构建 | Maven | 多模块 POM |
-| 持久层 | MyBatis | 3.0.4 |
-| 数据库 | PostgreSQL | 14+ |
-| 缓存 | Redis | 6+ |
-| AI 框架 | Spring AI (OpenAI-compatible) | 1.0.0 |
-| AI 模型 | DeepSeek | deepseek-chat |
-| 认证 | JWT (jjwt) | 0.12.6 |
-| 安全 | Spring Security | 无状态 JWT |
-| 对象存储 | 阿里云 OSS | 3.18.1 |
-| API 文档 | springdoc-openapi | 2.8.9 |
-| 监控 | Actuator + Prometheus (Micrometer) | — |
-| JSON | Fastjson | 2.0.28 |
-| 架构测试 | ArchUnit | 1.3.0 |
+
+| 类别     | 技术                                 | 版本            |
+| ------ | ---------------------------------- | ------------- |
+| 语言     | Java                               | 17            |
+| 框架     | Spring Boot                        | 3.4.1         |
+| 构建     | Maven                              | 多模块 POM       |
+| 持久层    | MyBatis                            | 3.0.4         |
+| 数据库    | PostgreSQL                         | 14+           |
+| 缓存     | Redis                              | 6+            |
+| AI 框架  | Spring AI (OpenAI-compatible)      | 1.0.0         |
+| AI 模型  | DeepSeek                           | deepseek-chat |
+| 认证     | JWT (jjwt)                         | 0.12.6        |
+| 安全     | Spring Security                    | 无状态 JWT       |
+| 对象存储   | 阿里云 OSS                            | 3.18.1        |
+| API 文档 | springdoc-openapi                  | 2.8.9         |
+| 监控     | Actuator + Prometheus (Micrometer) | —             |
+| JSON   | Fastjson                           | 2.0.28        |
+| 架构测试   | ArchUnit                           | 1.3.0         |
+
 
 ## DDD 分层架构
 
@@ -47,15 +49,17 @@
 
 ### 限界上下文
 
-| 上下文 | 包路径 | 核心职责 |
-|--------|--------|----------|
-| Identity | `jiangxiaopeng.ai.identity` | 用户注册/登录、JWT 令牌管理、邀请码验证 |
-| Conversation | `jiangxiaopeng.ai.conversation` | 对话会话管理、消息收发、流式响应、消息反馈 |
-| AI | `jiangxiaopeng.ai.ai` | 模型配置、多智能体编排、Spring AI 集成 |
-| Storage | `jiangxiaopeng.ai.storage` | 文件上传/下载、OSS 适配 |
-| Pet | `jiangxiaopeng.ai.pet` | 宠物档案 CRUD、头像管理 |
-| Diet | `jiangxiaopeng.ai.diet` | 食物库、餐食/饮水记录、营养统计、AI 饮食分析 |
-| Shared | `jiangxiaopeng.ai.shared` | 错误码、全局异常处理、请求上下文 |
+
+| 上下文          | 包路径                             | 核心职责                     |
+| ------------ | ------------------------------- | ------------------------ |
+| Identity     | `jiangxiaopeng.ai.identity`     | 用户注册/登录、JWT 令牌管理、邀请码验证   |
+| Conversation | `jiangxiaopeng.ai.conversation` | 对话会话管理、消息收发、流式响应、消息反馈    |
+| AI           | `jiangxiaopeng.ai.ai`           | 模型配置、多智能体编排、Spring AI 集成 |
+| Storage      | `jiangxiaopeng.ai.storage`      | 文件上传/下载、OSS 适配           |
+| Pet          | `jiangxiaopeng.ai.pet`          | 宠物档案 CRUD、头像管理           |
+| Diet         | `jiangxiaopeng.ai.diet`         | 食物库、餐食/饮水记录、营养统计、AI 饮食分析 |
+| Shared       | `jiangxiaopeng.ai.shared`       | 错误码、全局异常处理、请求上下文         |
+
 
 ### 各模块详解
 
@@ -131,10 +135,12 @@ HTTP 入口，REST 控制器：
 
 ### Token 配置
 
-| 类型 | 有效期 | Claims |
-|------|--------|--------|
-| Access Token | 3600s (1小时) | uid, email, plan |
-| Refresh Token | 604800s (7天) | type: refresh |
+
+| 类型            | 有效期          | Claims           |
+| ------------- | ------------ | ---------------- |
+| Access Token  | 3600s (1小时)  | uid, email, plan |
+| Refresh Token | 604800s (7天) | type: refresh    |
+
 
 ### 安全过滤链
 
@@ -151,6 +157,7 @@ SecurityFilterChain:
 ### 宠物上下文
 
 `PetContextInterceptor` 拦截 `/api/**` 请求，解析 `X-Pet-Id` 请求头：
+
 1. 验证宠物归属当前用户
 2. 设置 `PetContext` 到 `RequestContext` 线程变量
 3. 下游服务可通过 `RequestContext.getPetId()` 获取
@@ -189,16 +196,19 @@ MultiAgentChatOrchestrator
 
 ### 关键组件
 
-| 组件 | 职责 |
-|------|------|
-| `MultiAgentChatOrchestrator` | 编排入口，管理对话上下文与 Agent 调度 |
-| `PetAiAgentRuntimeAssembler` | 从数据库配置组装运行时 Agent 实例 |
-| `SubAgentDispatchTool` | Spring AI Tool，主 Agent 调用此工具分发至子 Agent |
-| `DomainMessageChatMemoryAdvisor` | 对话记忆，从 MessageRepository 加载历史 |
+
+| 组件                               | 职责                                     |
+| -------------------------------- | -------------------------------------- |
+| `MultiAgentChatOrchestrator`     | 编排入口，管理对话上下文与 Agent 调度                 |
+| `PetAiAgentRuntimeAssembler`     | 从数据库配置组装运行时 Agent 实例                   |
+| `SubAgentDispatchTool`           | Spring AI Tool，主 Agent 调用此工具分发至子 Agent |
+| `DomainMessageChatMemoryAdvisor` | 对话记忆，从 MessageRepository 加载历史          |
+
 
 ### 配置驱动
 
 Agent 系统完全由数据库配置驱动（`pet_ai_*` 表），支持：
+
 - 动态添加/修改 Agent 角色与提示词
 - 热更新工具绑定（Agent ↔ Tool 关系）
 - 技能组合（Agent ↔ Skill ↔ Tool 三级关联）
@@ -237,34 +247,37 @@ public class MybatisConfig {
 ### 逻辑删除
 
 通过 `MybatisLogicalDeleteInterceptor` 全局拦截：
+
 - `SELECT` 自动追加 `WHERE deleted_at IS NULL`
 - `DELETE` 转换为 `UPDATE SET deleted_at = NOW()`
 
 ### 数据库表一览
 
-| 分类 | 表名 | 说明 |
-|------|------|------|
-| 用户 | `users` | 用户账号 |
-| 用户 | `invitation_codes` | 邀请码 |
-| 对话 | `chat_sessions` | 对话会话 |
-| 对话 | `messages` | 消息记录 |
-| 对话 | `message_feedbacks` | 消息反馈 |
-| 对话 | `usage_records` | 使用量记录 |
-| 存储 | `attachments` | 文件附件 |
-| AI | `pet_ai_agent_config` | Agent 配置 |
-| AI | `pet_ai_client_config` | AI 客户端配置 |
-| AI | `pet_ai_skill_config` | 技能配置 |
-| AI | `pet_ai_tool_config` | 工具配置 |
-| AI | `pet_ai_prompt_config` | 提示词配置 |
-| AI | `pet_ai_agent_tool_relation` | Agent-Tool 关联 |
-| AI | `pet_ai_skill_tool_relation` | Skill-Tool 关联 |
-| AI | `pet_ai_agent_skill_relation` | Agent-Skill 关联 |
-| 宠物 | `pets` | 宠物档案 |
-| 饮食 | `staple_foods` | 主粮库 |
-| 饮食 | `foods` | 食物库 |
-| 饮食 | `pet_diet_records` | 饮食记录 |
-| 饮食 | `pet_water_records` | 饮水记录 |
-| 饮食 | `user_frequent_foods` | 用户常用食物 |
+
+| 分类  | 表名                            | 说明             |
+| --- | ----------------------------- | -------------- |
+| 用户  | `users`                       | 用户账号           |
+| 用户  | `invitation_codes`            | 邀请码            |
+| 对话  | `chat_sessions`               | 对话会话           |
+| 对话  | `messages`                    | 消息记录           |
+| 对话  | `message_feedbacks`           | 消息反馈           |
+| 对话  | `usage_records`               | 使用量记录          |
+| 存储  | `attachments`                 | 文件附件           |
+| AI  | `pet_ai_agent_config`         | Agent 配置       |
+| AI  | `pet_ai_client_config`        | AI 客户端配置       |
+| AI  | `pet_ai_skill_config`         | 技能配置           |
+| AI  | `pet_ai_tool_config`          | 工具配置           |
+| AI  | `pet_ai_prompt_config`        | 提示词配置          |
+| AI  | `pet_ai_agent_tool_relation`  | Agent-Tool 关联  |
+| AI  | `pet_ai_skill_tool_relation`  | Skill-Tool 关联  |
+| AI  | `pet_ai_agent_skill_relation` | Agent-Skill 关联 |
+| 宠物  | `pets`                        | 宠物档案           |
+| 饮食  | `staple_foods`                | 主粮库            |
+| 饮食  | `foods`                       | 食物库            |
+| 饮食  | `pet_diet_records`            | 饮食记录           |
+| 饮食  | `pet_water_records`           | 饮水记录           |
+| 饮食  | `user_frequent_foods`         | 用户常用食物         |
+
 
 ## SSE 流式响应
 
@@ -310,14 +323,14 @@ OssStorageAdapter implements StorageService
 ```
 前端                              后端                         OSS
  │                                 │                           │
- │── GET /avatar/presigned-url ──►│                           │
- │◄── { uploadUrl, objectKey } ──│                           │
+ │── GET /avatar/presigned-url ──► │                           │
+ │◄── { uploadUrl, objectKey } ──  │                           │
  │                                 │                           │
- │── PUT file ─────────────────────────────────────────────►│
- │◄── 200 OK ──────────────────────────────────────────────│
+ │── PUT file ────────────────────────────────────────────────►│
+ │◄── 200 OK ──────────────────────────────────────────────────│
  │                                 │                           │
- │── POST /avatar/confirm ───────►│── 更新 pet.avatarUrl ──►│
- │◄── { avatarUrl } ────────────│                           │
+ │── POST /avatar/confirm ────────►│── 更新 pet.avatarUrl ────► │
+ │◄── { avatarUrl } ───────────────│                           │
 ```
 
 ## CORS 配置
@@ -416,13 +429,16 @@ HTTP 响应 { code, message, success, timestamp, data }
 
 ## 已知限制与后续规划
 
-| 项目 | 现状 | 规划 |
-|------|------|------|
-| OAuth2 | 依赖已引入，域模型有 OAuthIdentity，但未实现 | 待实现第三方登录 |
-| 限流 | RateLimitFilter 已编写但禁用 | 待启用并测试 |
-| 数据库迁移 | 手动 SQL 脚本，无 Flyway | 建议引入 Flyway |
-| 缓存 | 仅用于 JWT 黑名单 | 可扩展热数据缓存 |
-| 单元测试 | 仅架构规则测试 | 需补充业务逻辑测试 |
-| 容器化 | 无 Dockerfile | 建议添加 |
-| CI/CD | 无 | 建议引入 GitHub Actions |
-| 消息队列 | 无 | AI 异步任务可引入 |
+
+| 项目     | 现状                            | 规划                  |
+| ------ | ----------------------------- | ------------------- |
+| OAuth2 | 依赖已引入，域模型有 OAuthIdentity，但未实现 | 待实现第三方登录            |
+| 限流     | RateLimitFilter 已编写但禁用        | 待启用并测试              |
+| 数据库迁移  | 手动 SQL 脚本，无 Flyway            | 建议引入 Flyway         |
+| 缓存     | 仅用于 JWT 黑名单                   | 可扩展热数据缓存            |
+| 单元测试   | 仅架构规则测试                       | 需补充业务逻辑测试           |
+| 容器化    | 无 Dockerfile                  | 建议添加                |
+| CI/CD  | 无                             | 建议引入 GitHub Actions |
+| 消息队列   | 无                             | AI 异步任务可引入          |
+
+
