@@ -1,5 +1,7 @@
 package jiangxiaopeng.ai.ai.infrastructure.agent.persistence;
 
+import java.util.Date;
+
 import jakarta.persistence.*;
 
 @Entity
@@ -43,6 +45,15 @@ public class PetAiClientConfigEntity {
     @Column(name = "delete_flag", nullable = false)
     private Short deleteFlag;
 
+    @Column(name = "create_time", nullable = false)
+    private Date createTime;
+
+    @Column(name = "update_time", nullable = false)
+    private Date updateTime;
+
+    @Column(name = "http_client_config", nullable = false)
+    private String httpClientConfig;
+
     public Long getClientConfigId() {
         return clientConfigId;
     }
@@ -65,5 +76,9 @@ public class PetAiClientConfigEntity {
 
     public String getModel() {
         return model;
+    }
+
+    public String getHttpClientConfig() {
+        return httpClientConfig;
     }
 }

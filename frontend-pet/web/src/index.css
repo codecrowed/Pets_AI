@@ -676,6 +676,89 @@ textarea {
   text-align: right;
 }
 
+.msg-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 0 2px;
+}
+.msg-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-text-3);
+  cursor: pointer;
+  font-size: 12px;
+  line-height: 1;
+  transition: background 0.15s, color 0.15s;
+}
+.msg-action-btn:hover:not(:disabled) {
+  background: var(--c-bg-2);
+  color: var(--c-text-2);
+}
+.msg-action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.msg-action-btn.active {
+  color: var(--c-ai);
+  background: var(--c-ai-pale);
+}
+.msg-action-label {
+  font-size: 12px;
+}
+@media (max-width: 480px) {
+  .msg-action-label {
+    display: none;
+  }
+  .msg-action-btn {
+    padding: 0;
+    min-width: 28px;
+  }
+}
+
+.msg-quick-replies {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  max-width: 580px;
+}
+.msg-quick-reply-chip {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface);
+  color: var(--c-text-2);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.msg-quick-reply-chip:hover:not(:disabled) {
+  background: var(--c-bg-2);
+  border-color: var(--c-ai-light);
+  color: var(--c-text-1);
+}
+.msg-quick-reply-chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Markdown 消息（react-markdown + GFM） */
 .markdown-body {
   word-break: break-word;

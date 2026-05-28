@@ -1,6 +1,5 @@
 package jiangxiaopeng.ai.conversation.application.dto;
 
-import java.time.Instant;
 import java.util.List;
 
 public record ChatListResponse(

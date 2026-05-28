@@ -25,7 +25,7 @@ public class UserApplicationService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_001));
         return new UserInfoDto(
-                user.getUid().value(),
+                user.getUid(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getAvatarUrl(),
@@ -46,7 +46,7 @@ public class UserApplicationService {
         user = userRepository.save(user);
 
         return new UserInfoDto(
-                user.getUid().value(),
+                user.getUid(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getAvatarUrl(),
@@ -74,7 +74,7 @@ public class UserApplicationService {
         user.updateAvatar(avatarUrl);
         user = userRepository.save(user);
         return new UserInfoDto(
-                user.getUid().value(),
+                user.getUid(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getAvatarUrl(),

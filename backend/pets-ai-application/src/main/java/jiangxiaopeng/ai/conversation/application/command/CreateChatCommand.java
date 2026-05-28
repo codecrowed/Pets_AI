@@ -1,3 +1,3 @@
 package jiangxiaopeng.ai.conversation.application.command;
 
-public record CreateChatCommand(Long userId, String title, String model) {}
+public record CreateChatCommand(Long uid, String title, String model) {}

@@ -1,15 +1,14 @@
 package jiangxiaopeng.ai.conversation.infrastructure.persistence;
 
-import jiangxiaopeng.ai.conversation.domain.model.ChatSession;
-import jiangxiaopeng.ai.conversation.domain.repository.ChatSessionRepository;
-import jiangxiaopeng.ai.shared.domain.vo.Uid;
-import jiangxiaopeng.ai.shared.domain.vo.UserId;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import jiangxiaopeng.ai.conversation.domain.model.ChatSession;
+import jiangxiaopeng.ai.conversation.domain.repository.ChatSessionRepository;
 
 @Repository
 public class ChatSessionRepositoryImpl implements ChatSessionRepository {
@@ -28,7 +27,7 @@ public class ChatSessionRepositoryImpl implements ChatSessionRepository {
     }
 
     @Override
-    public Optional<ChatSession> findByUid(String uid) {
+    public Optional<ChatSession> findByUid(Long uid) {
         return jpaRepository.findByUid(uid).map(this::toDomain);
     }
 
@@ -38,20 +37,20 @@ public class ChatSessionRepositoryImpl implements ChatSessionRepository {
     }
 
     @Override
-    public Page<ChatSession> findByUserIdAndStatus(Long userId, String status, Pageable pageable) {
+    public Page<ChatSession> findByUserIdAndStatus(Long uid, String status, Pageable pageable) {
         int offset = (int) pageable.getOffset();
         int size = pageable.getPageSize();
-        var content = jpaRepository.findByUserIdAndStatusPaged(userId, status, offset, size).stream().map(this::toDomain).toList();
-        long total = jpaRepository.countByUserIdAndStatus(userId, status);
+        var content = jpaRepository.findByUserIdAndStatusPaged(uid, status, offset, size).stream().map(this::toDomain).toList();
+        long total = jpaRepository.countByUserIdAndStatus(uid, status);
         return new PageImpl<>(content, pageable, total);
     }
 
     @Override
-    public Page<ChatSession> searchByUserIdAndKeyword(Long userId, String keyword, Pageable pageable) {
+    public Page<ChatSession> searchByUserIdAndKeyword(Long uid, String keyword, Pageable pageable) {
         int offset = (int) pageable.getOffset();
         int size = pageable.getPageSize();
-        var content = jpaRepository.searchByKeywordPaged(userId, keyword, offset, size).stream().map(this::toDomain).toList();
-        long total = jpaRepository.countSearchByKeyword(userId, keyword);
+        var content = jpaRepository.searchByKeywordPaged(uid, keyword, offset, size).stream().map(this::toDomain).toList();
+        long total = jpaRepository.countSearchByKeyword(uid, keyword);
         return new PageImpl<>(content, pageable, total);
     }
 
@@ -62,9 +61,8 @@ public class ChatSessionRepositoryImpl implements ChatSessionRepository {
 
     private ChatSessionJpaEntity toEntity(ChatSession session) {
         ChatSessionJpaEntity entity = new ChatSessionJpaEntity();
-        entity.setId(session.getId());
-        entity.setUid(session.getUid().value());
-        entity.setUserId(session.getUserId().value());
+        entity.setChatId(session.getChatId());
+        entity.setUid(session.getUid());
         entity.setTitle(session.getTitle());
         entity.setModel(session.getModel());
         entity.setStatus(session.getStatus());
@@ -75,14 +73,18 @@ public class ChatSessionRepositoryImpl implements ChatSessionRepository {
 
     private ChatSession toDomain(ChatSessionJpaEntity entity) {
         ChatSession session = new ChatSession();
-        session.setId(entity.getId());
-        session.setUid(new Uid(entity.getUid()));
-        session.setUserId(new UserId(entity.getUserId()));
+        session.setChatId(entity.getChatId());
+        session.setUid(entity.getUid());
         session.setTitle(entity.getTitle());
         session.setModel(entity.getModel());
         session.setStatus(entity.getStatus());
         session.setCreatedAt(entity.getCreatedAt());
         session.setUpdatedAt(entity.getUpdatedAt());
         return session;
+    }
+
+    @Override
+    public Optional<ChatSession> findByChatId(String chatId) {
+        return jpaRepository.findByChatId(chatId).map(this::toDomain);
     }
 }

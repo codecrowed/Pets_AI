@@ -42,7 +42,7 @@ public class DietRecordController {
     public ApiResponse<DietRecordDto> add(
             @Valid @RequestBody DietRecordAddRequest request,
             @AuthenticationPrincipal UserPrincipal user) {
-        return ApiResponse.ok(dietRecordService.addRecord(request, user.getUserId()));
+        return ApiResponse.ok(dietRecordService.addRecord(request, user.getUid()));
     }
 
     @Operation(summary = "编辑单条饮食记录")

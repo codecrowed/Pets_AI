@@ -1,7 +1,5 @@
 package jiangxiaopeng.ai.storage.infrastructure.persistence;
 
-import jiangxiaopeng.ai.shared.domain.vo.Uid;
-import jiangxiaopeng.ai.shared.domain.vo.UserId;
 import jiangxiaopeng.ai.storage.domain.model.Attachment;
 import jiangxiaopeng.ai.storage.domain.model.FileMetadata;
 import jiangxiaopeng.ai.storage.domain.model.StorageKey;
@@ -27,8 +25,8 @@ public class AttachmentRepositoryImpl implements AttachmentRepository {
     }
 
     @Override
-    public Optional<Attachment> findByUid(String uid) {
-        return jpaRepository.findByUid(uid).map(this::toDomain);
+    public Optional<Attachment> findByFileIdUid(Long fileId, Long uid) {
+        return jpaRepository.findByFileIdUid(fileId, uid).map(this::toDomain);
     }
 
     @Override
@@ -39,8 +37,7 @@ public class AttachmentRepositoryImpl implements AttachmentRepository {
     private AttachmentJpaEntity toEntity(Attachment a) {
         AttachmentJpaEntity e = new AttachmentJpaEntity();
         e.setId(a.getId());
-        e.setUid(a.getUid().value());
-        e.setUserId(a.getUserId().value());
+        e.setUid(a.getUid());
         e.setMessageId(a.getMessageId());
         e.setOriginalName(a.getMetadata().originalName());
         e.setStorageKey(a.getStorageKey().value());
@@ -53,8 +50,7 @@ public class AttachmentRepositoryImpl implements AttachmentRepository {
     private Attachment toDomain(AttachmentJpaEntity e) {
         Attachment a = new Attachment();
         a.setId(e.getId());
-        a.setUid(new Uid(e.getUid()));
-        a.setUserId(new UserId(e.getUserId()));
+        a.setUid(e.getUid());
         a.setMessageId(e.getMessageId());
         a.setMetadata(new FileMetadata(e.getOriginalName(), e.getContentType(), e.getFileSize()));
         a.setStorageKey(new StorageKey(e.getStorageKey()));

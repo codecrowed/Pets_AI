@@ -1,5 +1,6 @@
 package jiangxiaopeng.ai.ai.infrastructure.agent;
 
+import jiangxiaopeng.ai.ai.infrastructure.agent.model.HttpClientConfigRecord;
 import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiClientConfigEntity;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
@@ -14,6 +15,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.alibaba.fastjson.JSONObject;
+
+import java.net.http.HttpClient;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -65,9 +70,11 @@ public class PetAiClientAssemblyService {
 
     public ChatClient createStatelessChatClient(ChatModel chatModel, List<ToolCallback> toolCallbacks) {
         var builder = ChatClient.builder(chatModel);
+
         if (toolCallbacks != null && !toolCallbacks.isEmpty()) {
             builder.defaultToolCallbacks(toolCallbacks);
         }
+        
         return builder.build();
     }
 
@@ -76,7 +83,8 @@ public class PetAiClientAssemblyService {
                 client.getBaseUrl(),
                 client.getApiKey(),
                 client.getCompletionsPath(),
-                client.getEmbeddingsPath());
+                client.getEmbeddingsPath(),
+                client.getHttpClientConfig());
         return OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(OpenAiChatOptions.builder()
@@ -87,7 +95,11 @@ public class PetAiClientAssemblyService {
                 .build();
     }
 
-    private static OpenAiApi buildOpenAiApi(String baseUrl, String apiKey, String completionsPath, String embeddingsPath) {
+    private static OpenAiApi buildOpenAiApi(String baseUrl, 
+        String apiKey, 
+        String completionsPath, 
+        String embeddingsPath) {
+
         return OpenAiApi.builder()
                 .baseUrl(baseUrl)
                 .apiKey(apiKey)
@@ -98,6 +110,62 @@ public class PetAiClientAssemblyService {
                 .webClientBuilder(WebClient.builder()
                         .clientConnector(new JdkClientHttpConnector()))
                 .build();
+    }
+
+    private static OpenAiApi buildOpenAiApi(
+        String baseUrl, 
+        String apiKey, 
+        String completionsPath, 
+        String embeddingsPath,
+        String httpClientConfig) {
+
+        HttpClientConfigRecord httpClientConfigRecord = JSONObject.parseObject(httpClientConfig, HttpClientConfigRecord.class);
+
+        return OpenAiApi.builder()
+                .baseUrl(baseUrl)
+                .apiKey(apiKey)
+                .completionsPath(trimLeadingSlash(completionsPath))
+                .embeddingsPath(trimLeadingSlash(embeddingsPath))
+                .restClientBuilder(RestClient.builder()
+                        .requestFactory(buildJdkClientHttpRequestFactory(httpClientConfigRecord)))
+                .webClientBuilder(WebClient.builder()
+                        .clientConnector(buildHttpConnector(httpClientConfigRecord)))
+                .build();
+    }
+
+    /**
+     * 构建 JdkClientHttpConnector
+     * @param httpClientConfigRecord
+     * @return
+     */
+    private static JdkClientHttpConnector buildHttpConnector(HttpClientConfigRecord httpClientConfigRecord) {
+        
+        JdkClientHttpConnector jdkClientHttpConnector = new JdkClientHttpConnector(
+            HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(httpClientConfigRecord.connectTimeout()))
+            .build()
+        );
+
+        jdkClientHttpConnector.setReadTimeout(Duration.ofSeconds(httpClientConfigRecord.readTimeout()));
+
+        return jdkClientHttpConnector;
+    }
+
+    /**
+     * 构建 JdkClientHttpRequestFactory
+     * @param httpClientConfigRecord
+     * @return
+     */
+    private static JdkClientHttpRequestFactory buildJdkClientHttpRequestFactory(HttpClientConfigRecord httpClientConfigRecord) {
+        JdkClientHttpRequestFactory jdkClientHttpRequestFactory = new JdkClientHttpRequestFactory(
+            HttpClient.newBuilder()
+            .connectTimeout(Duration.ofSeconds(httpClientConfigRecord.connectTimeout()))
+            .build()
+        );
+        
+        jdkClientHttpRequestFactory.setReadTimeout(Duration.ofSeconds(httpClientConfigRecord.readTimeout()));
+
+        return jdkClientHttpRequestFactory;
     }
 
     private static String trimLeadingSlash(String path) {

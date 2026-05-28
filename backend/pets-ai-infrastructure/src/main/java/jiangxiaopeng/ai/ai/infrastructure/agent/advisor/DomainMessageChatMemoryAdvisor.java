@@ -54,8 +54,19 @@ public final class DomainMessageChatMemoryAdvisor implements BaseChatMemoryAdvis
 
     private final String agentId;
 
-    private DomainMessageChatMemoryAdvisor(MessageRepository messageRepository, int maxMessages,
-            String defaultConversationId, int order, Scheduler scheduler, String agentId) {
+    private final Long uid;
+
+    private final boolean skipUserPersist;
+
+    private DomainMessageChatMemoryAdvisor(
+            MessageRepository messageRepository, 
+            int maxMessages,
+            String defaultConversationId, 
+            int order, 
+            Scheduler scheduler, 
+            String agentId,
+            Long uid,
+            boolean skipUserPersist) {
         Assert.notNull(messageRepository, "messageRepository cannot be null");
         Assert.hasText(defaultConversationId, "defaultConversationId cannot be null or empty");
         Assert.notNull(scheduler, "scheduler cannot be null");
@@ -65,6 +76,8 @@ public final class DomainMessageChatMemoryAdvisor implements BaseChatMemoryAdvis
         this.order = order;
         this.scheduler = scheduler;
         this.agentId = agentId;
+        this.skipUserPersist = skipUserPersist;
+        this.uid = uid;
     }
 
     @Override
@@ -83,7 +96,7 @@ public final class DomainMessageChatMemoryAdvisor implements BaseChatMemoryAdvis
         Long sessionId = Long.parseLong(conversationId);
 
         // 1. 从数据库加载领域消息历史
-        List<Message> domainMessages = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
+        List<Message> domainMessages = messageRepository.findBySessionIdOrderByCreatedAtAsc(uid, sessionId);
 
         // 2. 消息窗口：只保留最近 maxMessages 条
         if (domainMessages.size() > maxMessages) {
@@ -103,11 +116,13 @@ public final class DomainMessageChatMemoryAdvisor implements BaseChatMemoryAdvis
                 .prompt(chatClientRequest.prompt().mutate().messages(processedMessages).build())
                 .build();
 
-        // 5. 将本轮用户消息持久化为领域 Message
-        UserMessage userMessage = processedRequest.prompt().getUserMessage();
-        if (userMessage != null) {
-            Message domainUserMsg = Message.createUserMessage(sessionId, userMessage.getText());
-            messageRepository.save(domainUserMsg);
+        // 5. 将本轮用户消息持久化为领域 Message（重新生成时跳过，避免重复用户消息）
+        if (!skipUserPersist) {
+            UserMessage userMessage = processedRequest.prompt().getUserMessage();
+            if (userMessage != null) {
+                Message domainUserMsg = Message.createUserMessage(uid, sessionId, agentId, userMessage.getText());
+                messageRepository.save(domainUserMsg);
+            }
         }
 
         return processedRequest;
@@ -147,7 +162,7 @@ public final class DomainMessageChatMemoryAdvisor implements BaseChatMemoryAdvis
             String normalizedContent = normalizeContent(content);
             log.debug("Normalized AI content (first 200 chars): {}", 
                     normalizedContent != null && normalizedContent.length() > 200 ? normalizedContent.substring(0, 200) + "..." : normalizedContent);
-            Message aiMsg = Message.createPendingAiMessage(sessionId, model);
+            Message aiMsg = Message.createPendingAiMessage(uid, sessionId, model, agentId);
             aiMsg.complete(normalizedContent);
             if (tokenUsage != null) {
                 aiMsg.setTokenUsage(tokenUsage);
@@ -248,6 +263,10 @@ public final class DomainMessageChatMemoryAdvisor implements BaseChatMemoryAdvis
 
         private String agentId = null;
 
+        private boolean skipUserPersist = false;
+
+        private Long uid = null;
+
         private Builder(MessageRepository messageRepository) {
             this.messageRepository = messageRepository;
         }
@@ -277,9 +296,22 @@ public final class DomainMessageChatMemoryAdvisor implements BaseChatMemoryAdvis
             return this;
         }
 
+        public Builder skipUserPersist(boolean skipUserPersist) {
+            this.skipUserPersist = skipUserPersist;
+            return this;
+        }
+
         public DomainMessageChatMemoryAdvisor build() {
             return new DomainMessageChatMemoryAdvisor(
-                    this.messageRepository, this.maxMessages, this.conversationId, this.order, this.scheduler, this.agentId);
+                    this.messageRepository, 
+                    this.maxMessages, 
+                    this.conversationId, 
+                    this.order, 
+                    this.scheduler,
+                    this.agentId, 
+                    this.uid, 
+                    this.skipUserPersist
+                );
         }
     }
 }

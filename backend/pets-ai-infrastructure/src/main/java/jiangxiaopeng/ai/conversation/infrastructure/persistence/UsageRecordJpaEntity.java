@@ -3,16 +3,21 @@ package jiangxiaopeng.ai.conversation.infrastructure.persistence;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+import lombok.Getter;
+import lombok.Setter;
+
 @Entity
 @Table(name = "usage_records")
+@Getter
+@Setter
 public class UsageRecordJpaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
+    @Column(name = "uid", nullable = false)
+    private Long uid;
 
     @Column(name = "session_id")
     private Long sessionId;
@@ -34,18 +39,4 @@ public class UsageRecordJpaEntity {
         if (recordedAt == null) recordedAt = Instant.now();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Long getUserId() { return userId; }
-    public void setUserId(Long userId) { this.userId = userId; }
-    public Long getSessionId() { return sessionId; }
-    public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
-    public int getTokensPrompt() { return tokensPrompt; }
-    public void setTokensPrompt(int tokensPrompt) { this.tokensPrompt = tokensPrompt; }
-    public int getTokensCompletion() { return tokensCompletion; }
-    public void setTokensCompletion(int tokensCompletion) { this.tokensCompletion = tokensCompletion; }
-    public Instant getRecordedAt() { return recordedAt; }
-    public void setRecordedAt(Instant recordedAt) { this.recordedAt = recordedAt; }
 }

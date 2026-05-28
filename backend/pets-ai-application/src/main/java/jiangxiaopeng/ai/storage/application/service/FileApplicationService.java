@@ -1,6 +1,12 @@
 package jiangxiaopeng.ai.storage.application.service;
 
-import jiangxiaopeng.ai.shared.domain.vo.UserId;
+import java.io.InputStream;
+import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
 import jiangxiaopeng.ai.shared.exception.BusinessException;
 import jiangxiaopeng.ai.shared.exception.ErrorCode;
 import jiangxiaopeng.ai.storage.application.dto.FileUploadResponse;
@@ -10,12 +16,6 @@ import jiangxiaopeng.ai.storage.domain.model.StorageKey;
 import jiangxiaopeng.ai.storage.domain.repository.AttachmentRepository;
 import jiangxiaopeng.ai.storage.domain.service.FileValidator;
 import jiangxiaopeng.ai.storage.domain.service.StorageService;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
-
-import java.io.InputStream;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -33,10 +33,10 @@ public class FileApplicationService {
         this.storageService = storageService;
     }
 
-    public FileUploadResponse uploadFile(Long userId, MultipartFile file) {
+    public FileUploadResponse uploadFile(Long uid, MultipartFile file) {
         fileValidator.validate(file.getOriginalFilename(), file.getSize());
 
-        String storageKey = "uploads/" + userId + "/" + UUID.randomUUID() + "/" + file.getOriginalFilename();
+        String storageKey = "uploads/" + uid + "/" + UUID.randomUUID() + "/" + file.getOriginalFilename();
 
         try {
             storageService.upload(storageKey, file.getInputStream(), file.getContentType(), file.getSize());
@@ -45,11 +45,11 @@ public class FileApplicationService {
         }
 
         FileMetadata metadata = new FileMetadata(file.getOriginalFilename(), file.getContentType(), file.getSize());
-        Attachment attachment = Attachment.create(new UserId(userId), metadata, new StorageKey(storageKey));
+        Attachment attachment = Attachment.create(uid, metadata, new StorageKey(storageKey));
         attachment = attachmentRepository.save(attachment);
 
         return new FileUploadResponse(
-                attachment.getUid().value(),
+                attachment.getUid(),
                 metadata.originalName(),
                 metadata.contentType(),
                 metadata.fileSize(),
@@ -58,11 +58,11 @@ public class FileApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public FileUploadResponse getFileInfo(String fileId, Long userId) {
-        Attachment attachment = attachmentRepository.findByUid(fileId)
+    public FileUploadResponse getFileInfo(Long fileId, Long userId) {
+        Attachment attachment = attachmentRepository.findByFileIdUid(fileId, userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FILE_003));
         return new FileUploadResponse(
-                attachment.getUid().value(),
+                attachment.getUid(),
                 attachment.getMetadata().originalName(),
                 attachment.getMetadata().contentType(),
                 attachment.getMetadata().fileSize(),
@@ -70,14 +70,14 @@ public class FileApplicationService {
         );
     }
 
-    public InputStream downloadFile(String fileId, Long userId) {
-        Attachment attachment = attachmentRepository.findByUid(fileId)
+    public InputStream downloadFile(Long fileId, Long uid) {
+        Attachment attachment = attachmentRepository.findByFileIdUid(fileId, uid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FILE_003));
         return storageService.download(attachment.getStorageKey().value());
     }
 
-    public void deleteFile(String fileId, Long userId) {
-        Attachment attachment = attachmentRepository.findByUid(fileId)
+    public void deleteFile(Long fileId, Long uid) {
+        Attachment attachment = attachmentRepository.findByFileIdUid(fileId, uid)
                 .orElseThrow(() -> new BusinessException(ErrorCode.FILE_003));
         storageService.delete(attachment.getStorageKey().value());
         attachmentRepository.deleteById(attachment.getId());

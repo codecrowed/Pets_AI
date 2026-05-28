@@ -6,6 +6,6 @@ import java.util.Optional;
 
 public interface AttachmentRepository {
     Attachment save(Attachment attachment);
-    Optional<Attachment> findByUid(String uid);
+    Optional<Attachment> findByFileIdUid(Long fileId, Long uid);
     void deleteById(Long id);
 }

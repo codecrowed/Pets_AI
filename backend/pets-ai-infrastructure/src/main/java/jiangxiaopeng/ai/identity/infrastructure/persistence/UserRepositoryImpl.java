@@ -2,7 +2,6 @@ package jiangxiaopeng.ai.identity.infrastructure.persistence;
 
 import jiangxiaopeng.ai.identity.domain.model.*;
 import jiangxiaopeng.ai.identity.domain.repository.UserRepository;
-import jiangxiaopeng.ai.shared.domain.vo.Uid;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -51,7 +50,7 @@ public class UserRepositoryImpl implements UserRepository {
     private UserJpaEntity toEntity(User user) {
         UserJpaEntity entity = new UserJpaEntity();
         entity.setId(user.getId());
-        entity.setUid(user.getUid().value());
+        entity.setUid(user.getUid());
         entity.setUsername(user.getUsername());
         entity.setEmail(user.getEmail());
         entity.setAvatarUrl(user.getAvatarUrl());
@@ -71,7 +70,7 @@ public class UserRepositoryImpl implements UserRepository {
     private User toDomain(UserJpaEntity entity) {
         User user = new User();
         user.setId(entity.getId());
-        user.setUid(new Uid(entity.getUid()));
+        user.setUid(entity.getUid());
         user.setUsername(entity.getUsername());
         user.setEmail(entity.getEmail());
         user.setAvatarUrl(entity.getAvatarUrl());

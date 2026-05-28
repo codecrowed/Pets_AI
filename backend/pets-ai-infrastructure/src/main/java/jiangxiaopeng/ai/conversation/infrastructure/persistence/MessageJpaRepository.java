@@ -2,6 +2,8 @@ package jiangxiaopeng.ai.conversation.infrastructure.persistence;
 
 import org.apache.ibatis.annotations.*;
 
+import jiangxiaopeng.ai.conversation.domain.model.Message;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,24 +23,25 @@ public interface MessageJpaRepository {
             WHERE uid = #{uid}
             LIMIT 1
             """)
-    Optional<MessageJpaEntity> findByUidInternal(String uid);
+    Optional<MessageJpaEntity> findByUidInternal(Long uid);
 
     @Select("""
             SELECT id, uid, session_id, role, content, model, tokens_prompt, tokens_completion, status, created_at
             FROM messages
             WHERE session_id = #{sessionId}
+            AND uid = #{uid}
             ORDER BY created_at ASC
             """)
-    List<MessageJpaEntity> findBySessionIdOrderByCreatedAtAsc(Long sessionId);
+    List<MessageJpaEntity> findBySessionIdOrderByCreatedAtAsc(Long uid, Long sessionId);
 
     @Select("""
             SELECT id, uid, session_id, role, content, model, tokens_prompt, tokens_completion, status, created_at
             FROM messages
-            WHERE session_id = #{sessionId} AND id < #{cursorId}
+            WHERE session_id = #{sessionId} AND id < #{cursorId} AND uid = #{uid}
             ORDER BY created_at DESC
             LIMIT #{size}
             """)
-    List<MessageJpaEntity> findByCursor(@Param("sessionId") Long sessionId, @Param("cursorId") Long cursorId, @Param("size") int size);
+    List<MessageJpaEntity> findByCursor(@Param("uid") Long uid, @Param("sessionId") Long sessionId, @Param("cursorId") Long cursorId, @Param("size") int size);
 
     @Insert("""
             INSERT INTO messages(uid, session_id, role, content, model, tokens_prompt, tokens_completion, status, created_at)
@@ -61,7 +64,7 @@ public interface MessageJpaRepository {
     @Delete("DELETE FROM messages WHERE session_id = #{sessionId}")
     void deleteBySessionId(Long sessionId);
 
-    default Optional<MessageJpaEntity> findByUid(String uid) {
+    default Optional<MessageJpaEntity> findByUid(Long uid) {
         return findByUidInternal(uid);
     }
 
@@ -75,4 +78,31 @@ public interface MessageJpaRepository {
         }
         return entity;
     }
+
+    @Select("""
+            SELECT id, uid, session_id, role, content, model, tokens_prompt, tokens_completion, status, created_at
+            FROM messages
+            WHERE session_id = #{sessionId} AND role = 'USER'
+            AND uid = #{uid}
+            ORDER BY created_at DESC
+            LIMIT 1
+            """)
+    Optional<MessageJpaEntity> findListUserMessageByUid(
+        @Param("uid") Long uid, 
+        @Param("sessionId") Long sessionId);
+
+    @Select("""
+            SELECT id, uid, session_id, role, content, model, tokens_prompt, tokens_completion, status, created_at
+            FROM messages
+            WHERE msg_id = #{msgId} and uid = #{uid}
+            LIMIT 1
+            """)
+    Optional<MessageJpaEntity> findByMsgIdUid(Long uid, String msgId);
+
+    @Select("""
+            SELECT id, uid, session_id, role, content, model, tokens_prompt, tokens_completion, status, created_at
+            FROM messages
+            WHERE session_id = #{sessionId}
+            """)
+    List<MessageJpaEntity> findBySessionId(Long sessionId);
 }

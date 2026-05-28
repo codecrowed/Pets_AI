@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter;
 
+import jiangxiaopeng.ai.ai.domain.service.ChatCompletionService;
 import jiangxiaopeng.ai.conversation.application.command.SendMessageCommand;
 import jiangxiaopeng.ai.conversation.domain.event.AiReplyCompletedEvent;
 import jiangxiaopeng.ai.conversation.domain.model.ChatSession;
@@ -15,10 +16,8 @@ import jiangxiaopeng.ai.conversation.domain.model.MessageRole;
 import jiangxiaopeng.ai.conversation.domain.model.TokenUsage;
 import jiangxiaopeng.ai.conversation.domain.repository.ChatSessionRepository;
 import jiangxiaopeng.ai.conversation.domain.repository.MessageRepository;
-import jiangxiaopeng.ai.conversation.domain.service.AiModelRouter;
 import jiangxiaopeng.ai.conversation.domain.service.ChatDomainService;
 import jiangxiaopeng.ai.shared.DomainEventPublisher;
-import jiangxiaopeng.ai.shared.domain.vo.UserId;
 import jiangxiaopeng.ai.shared.exception.BusinessException;
 import jiangxiaopeng.ai.shared.exception.ErrorCode;
 import lombok.extern.log4j.Log4j2;
@@ -28,7 +27,7 @@ import lombok.extern.log4j.Log4j2;
 public class StreamingChatService {
 
     private final ChatSessionRepository sessionRepo;
-    private final AiModelRouter aiModelRouter;
+    private final ChatCompletionService chatService;
     private final ChatDomainService chatDomainService;
     private final DomainEventPublisher eventPublisher;
     private final MessageRepository messageRepository;
@@ -37,12 +36,12 @@ public class StreamingChatService {
 
     public StreamingChatService(
             ChatSessionRepository sessionRepo,
-            AiModelRouter aiModelRouter,
+            ChatCompletionService chatService,
             ChatDomainService chatDomainService,
             DomainEventPublisher eventPublisher,
             MessageRepository messageRepository) {
         this.sessionRepo = sessionRepo;
-        this.aiModelRouter = aiModelRouter;
+        this.chatService = chatService;
         this.chatDomainService = chatDomainService;
         this.eventPublisher = eventPublisher;
         this.messageRepository = messageRepository;
@@ -54,22 +53,22 @@ public class StreamingChatService {
      */
     public ResponseBodyEmitter execute(SendMessageCommand cmd) {
         ResponseBodyEmitter emitter = cmd.emitter();
-
-        ChatSession session = sessionRepo.findByUid(cmd.chatId())
+        
+        // 鉴权会话归属
+        ChatSession session = sessionRepo.findByChatId(cmd.chatId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_001));
-        session.validateOwnership(new UserId(cmd.userId()));
+        session.validateOwnership(cmd.uid());
 
         String conversationId = String.valueOf(session.getId());
         Long sessionId = session.getId();
-        Long userId = cmd.userId();
         String userContent = cmd.content();
         String sessionModel = session.getModel();
 
         streamingExecutor.submit(() -> {
             try {
-                aiModelRouter.streamComplete(conversationId, userContent, emitter);
+                chatService.streamChat(conversationId, userContent, emitter);
 
-                List<Message> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
+                List<Message> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(cmd.uid(), sessionId);
                 Message aiMsg = findLastAssistant(messages);
 
                 chatDomainService.autoUpdateTitle(session, userContent);
@@ -81,7 +80,7 @@ public class StreamingChatService {
                         : new TokenUsage(0, 0);
 
                 eventPublisher.publish(new AiReplyCompletedEvent(
-                        new UserId(userId), sessionId, sessionModel, tokenUsage
+                        cmd.uid(), sessionId, sessionModel, tokenUsage
                 ));
             } catch (Exception e) {
                 log.error("Streaming chat error for session {}: {}", sessionId, e.getMessage(), e);

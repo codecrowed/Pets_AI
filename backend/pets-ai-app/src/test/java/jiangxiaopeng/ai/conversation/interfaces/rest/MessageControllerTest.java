@@ -1,14 +1,16 @@
 package jiangxiaopeng.ai.conversation.interfaces.rest;
 
-import jiangxiaopeng.ai.conversation.application.command.SendMessageCommand;
-import jiangxiaopeng.ai.conversation.application.dto.MessageDto;
-import jiangxiaopeng.ai.conversation.application.service.MessageApplicationService;
-import jiangxiaopeng.ai.conversation.application.service.StreamingChatService;
-import jiangxiaopeng.ai.identity.infrastructure.security.UserPrincipal;
-import jiangxiaopeng.ai.shared.exception.BusinessException;
-import jiangxiaopeng.ai.shared.exception.ErrorCode;
-import jiangxiaopeng.ai.shared.infrastructure.web.ApiResponseBodyAdvice;
-import jiangxiaopeng.ai.shared.infrastructure.web.GlobalExceptionHandler;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.Instant;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -27,13 +29,15 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import java.time.Instant;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import jiangxiaopeng.ai.conversation.application.command.SendMessageCommand;
+import jiangxiaopeng.ai.conversation.application.dto.MessageDto;
+import jiangxiaopeng.ai.conversation.application.service.MessageApplicationService;
+import jiangxiaopeng.ai.conversation.application.service.StreamingChatService;
+import jiangxiaopeng.ai.identity.infrastructure.security.UserPrincipal;
+import jiangxiaopeng.ai.shared.exception.BusinessException;
+import jiangxiaopeng.ai.shared.exception.ErrorCode;
+import jiangxiaopeng.ai.shared.infrastructure.web.ApiResponseBodyAdvice;
+import jiangxiaopeng.ai.shared.infrastructure.web.GlobalExceptionHandler;
 
 @ExtendWith(MockitoExtension.class)
 class MessageControllerTest {
@@ -50,7 +54,7 @@ class MessageControllerTest {
     private static final String BASE_URL = "/api/v1/chats/" + CHAT_ID + "/messages";
     private static final Long USER_ID = 1L;
     private static final UserPrincipal TEST_USER =
-            new UserPrincipal(USER_ID, "user-uid", "test@example.com", "free");
+            new UserPrincipal(USER_ID, "test@example.com", "free");
 
     @BeforeEach
     void setUp() {
@@ -86,8 +90,8 @@ class MessageControllerTest {
         @DisplayName("happy path - returns 200 with MessageDto")
         void happyPath_returns200() throws Exception {
             var expectedDto = new MessageDto(
-                    "msg-uid-1", "ASSISTANT", "Hello! How can I help?",
-                    null, null, "deepseek", Instant.now()
+                    1L, "ASSISTANT", "Hello! How can I help?", null, null,
+                    "deepseek", Instant.now()
             );
             when(messageService.sendMessageSync(any(SendMessageCommand.class)))
                     .thenReturn(expectedDto);
@@ -99,7 +103,7 @@ class MessageControllerTest {
                                     """))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.id").value("msg-uid-1"))
+                    .andExpect(jsonPath("$.data.id").value(1L))
                     .andExpect(jsonPath("$.data.role").value("ASSISTANT"))
                     .andExpect(jsonPath("$.data.content").value("Hello! How can I help?"))
                     .andExpect(jsonPath("$.data.model").value("deepseek"));
@@ -111,8 +115,8 @@ class MessageControllerTest {
         @DisplayName("happy path with attachmentIds - passes correct command")
         void withAttachments_passesAttachmentsToCommand() throws Exception {
             var expectedDto = new MessageDto(
-                    "msg-uid-2", "ASSISTANT", "I see the file.",
-                    null, null, "deepseek", Instant.now()
+                    2L, "ASSISTANT", "I see the file.", null, null,
+                    "deepseek", Instant.now()
             );
             when(messageService.sendMessageSync(any(SendMessageCommand.class)))
                     .thenReturn(expectedDto);
@@ -129,7 +133,7 @@ class MessageControllerTest {
             verify(messageService).sendMessageSync(captor.capture());
             var cmd = captor.getValue();
             assertThat(cmd.chatId()).isEqualTo(CHAT_ID);
-            assertThat(cmd.userId()).isEqualTo(USER_ID);
+            assertThat(cmd.uid()).isEqualTo(USER_ID);
             assertThat(cmd.content()).isEqualTo("Check this file");
             assertThat(cmd.attachmentIds()).containsExactly("file-1", "file-2");
         }

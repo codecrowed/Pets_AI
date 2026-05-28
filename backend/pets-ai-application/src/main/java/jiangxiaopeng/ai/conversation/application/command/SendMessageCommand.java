@@ -7,7 +7,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter
 
 public record SendMessageCommand(
         String chatId,
-        Long userId,
+        Long uid,
         @NotBlank String content,
         List<String> attachmentIds,
         ResponseBodyEmitter emitter

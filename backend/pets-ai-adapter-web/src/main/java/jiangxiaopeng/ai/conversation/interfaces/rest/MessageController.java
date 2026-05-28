@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jiangxiaopeng.ai.conversation.application.command.GetMessageCommand;
 import jiangxiaopeng.ai.conversation.application.command.SendMessageCommand;
 import jiangxiaopeng.ai.conversation.application.command.SubmitFeedbackCommand;
 import jiangxiaopeng.ai.conversation.application.dto.MessageDto;
@@ -56,7 +57,7 @@ public class MessageController {
                 throw new BusinessException(ErrorCode.MSG_004);
             }
         }
-        return ApiResponse.ok(messageService.listMessages(chatId, user.getUserId(), cursorId, size));
+        return ApiResponse.ok(messageService.listMessages(new GetMessageCommand(chatId, user.getUid(), cursorId, size)));
     }
 
     @Operation(summary = "发送消息（同步）", description = "发送用户消息并等待完整助手回复。")
@@ -65,7 +66,7 @@ public class MessageController {
             @AuthenticationPrincipal UserPrincipal user,
             @Parameter(description = "会话 ID") @PathVariable String chatId,
             @Valid @RequestBody SendMessageRequest request) {
-        var command = new SendMessageCommand(chatId, user.getUserId(), request.content(), request.attachmentIds(), null);
+        var command = new SendMessageCommand(chatId, user.getUid(), request.content(), request.attachmentIds(), null);
         return ApiResponse.ok(messageService.sendMessageSync(command));
     }
 
@@ -77,7 +78,7 @@ public class MessageController {
             @AuthenticationPrincipal UserPrincipal user,
             @Parameter(description = "会话 ID") @PathVariable String chatId,
             @Valid @RequestBody SendMessageRequest request) {
-        var command = new SendMessageCommand(chatId, user.getUserId(), request.content(), request.attachmentIds(), new ResponseBodyEmitter(SSE_TIMEOUT_MS));
+        var command = new SendMessageCommand(chatId, user.getUid(), request.content(), request.attachmentIds(), new ResponseBodyEmitter(SSE_TIMEOUT_MS));
         return streamingChatService.execute(command);
     }
 
@@ -88,7 +89,7 @@ public class MessageController {
             @Parameter(description = "会话 ID") @PathVariable String chatId,
             @Parameter(description = "消息 ID") @PathVariable String msgId) {
         // Regenerate reuses the streaming service with the last user message
-        var command = new SendMessageCommand(chatId, user.getUserId(), "", null, new ResponseBodyEmitter(SSE_TIMEOUT_MS));
+        var command = new SendMessageCommand(chatId, user.getUid(), "", null, new ResponseBodyEmitter(SSE_TIMEOUT_MS));
         return streamingChatService.execute(command);
     }
 
@@ -99,7 +100,7 @@ public class MessageController {
             @Parameter(description = "会话 ID") @PathVariable String chatId,
             @Parameter(description = "消息 ID") @PathVariable String msgId,
             @Valid @RequestBody FeedbackRequest request) {
-        messageService.submitFeedback(new SubmitFeedbackCommand(msgId, user.getUserId(), request.type()));
+        messageService.submitFeedback(new SubmitFeedbackCommand(msgId, user.getUid(), request.type()));
         return ApiResponse.okEmpty();
     }
 
@@ -109,7 +110,7 @@ public class MessageController {
             @AuthenticationPrincipal UserPrincipal user,
             @Parameter(description = "会话 ID") @PathVariable String chatId,
             @Parameter(description = "消息 ID") @PathVariable String msgId) {
-        messageService.removeFeedback(msgId, user.getUserId());
+        messageService.removeFeedback(new SubmitFeedbackCommand(msgId, user.getUid(), null));
         return ApiResponse.okEmpty();
     }
 

@@ -3,7 +3,8 @@ package jiangxiaopeng.ai.conversation.application.dto;
 import java.time.Instant;
 
 public record ChatSummaryDto(
-        String id,
+        String chatId,
+        Long uid,
         String title,
         Instant updatedAt
 ) {}

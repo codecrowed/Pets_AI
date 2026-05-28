@@ -7,15 +7,15 @@ import java.util.Optional;
 @Mapper
 public interface AttachmentJpaRepository {
     @Select("""
-            SELECT id, uid, user_id, message_id, original_name, storage_key, content_type, file_size, created_at
+            SELECT id, uid, message_id, original_name, storage_key, content_type, file_size, created_at
             FROM attachments
-            WHERE uid = #{uid}
+            WHERE id = #{id} AND uid = #{uid}
             LIMIT 1
             """)
-    Optional<AttachmentJpaEntity> findByUid(String uid);
+    Optional<AttachmentJpaEntity> findByFileIdUid(Long fileId, Long uid);
 
     @Select("""
-            SELECT id, uid, user_id, message_id, original_name, storage_key, content_type, file_size, created_at
+            SELECT id, uid, message_id, original_name, storage_key, content_type, file_size, created_at
             FROM attachments
             WHERE id = #{id}
             LIMIT 1
@@ -23,7 +23,7 @@ public interface AttachmentJpaRepository {
     Optional<AttachmentJpaEntity> findById(Long id);
 
     @Insert("""
-            INSERT INTO attachments(uid, user_id, message_id, original_name, storage_key, content_type, file_size, created_at)
+            INSERT INTO attachments(uid, message_id, original_name, storage_key, content_type, file_size, created_at)
             VALUES(#{uid}, #{userId}, #{messageId}, #{originalName}, #{storageKey}, #{contentType}, #{fileSize}, COALESCE(#{createdAt}, now()))
             """)
     @Options(useGeneratedKeys = true, keyProperty = "id")
@@ -31,7 +31,7 @@ public interface AttachmentJpaRepository {
 
     @Update("""
             UPDATE attachments
-            SET uid = #{uid}, user_id = #{userId}, message_id = #{messageId}, original_name = #{originalName},
+            SET uid = #{uid}, message_id = #{messageId}, original_name = #{originalName},
                 storage_key = #{storageKey}, content_type = #{contentType}, file_size = #{fileSize}
             WHERE id = #{id}
             """)

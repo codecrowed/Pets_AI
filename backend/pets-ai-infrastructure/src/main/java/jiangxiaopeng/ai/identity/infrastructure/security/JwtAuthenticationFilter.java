@@ -40,12 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (parsed.isPresent()) {
                 ParsedAccessToken p = parsed.get();
                 UserPrincipal principal = new UserPrincipal(
-                        p.userId(), p.uid(), p.email(), p.plan());
+                        p.uid(), p.email(), p.plan());
                 var authentication = new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
                 authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                UserContext userContext = UserContext.of(p.userId(), p.uid(), p.email(), p.plan());
+                UserContext userContext = UserContext.of(p.uid(), p.email(), p.plan());
                 RequestContext.set(RequestContextData.ofUser(userContext));
             }
 

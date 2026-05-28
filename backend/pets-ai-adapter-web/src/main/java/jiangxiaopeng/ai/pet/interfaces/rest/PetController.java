@@ -45,7 +45,7 @@ public class PetController {
     @GetMapping
     public ApiResponse<List<PetSummaryDto>> listPets(@AuthenticationPrincipal UserPrincipal user) {
         Objects.requireNonNull(user, "user");
-        return ApiResponse.ok(petService.listPets(user.getUserId()));
+        return ApiResponse.ok(petService.listPets(user.getUid()));
     }
 
     @Operation(summary = "获取宠物详情", description = "根据宠物 ID 获取详细信息")
@@ -54,9 +54,9 @@ public class PetController {
             @AuthenticationPrincipal UserPrincipal user,
             @Parameter(description = "宠物 ID") @PathVariable Long petId) {
         Objects.requireNonNull(user, "user");
-        return ApiResponse.ok(petService.getPetDetail(petId, user.getUserId()));
+        return ApiResponse.ok(petService.getPetDetail(petId, user.getUid()));
     }
-
+    
     @Operation(summary = "创建宠物档案", description = "为当前用户创建新的宠物档案")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -64,7 +64,7 @@ public class PetController {
             @AuthenticationPrincipal UserPrincipal user,
             @Valid @RequestBody PetCreateCommand command) {
         Objects.requireNonNull(user, "user");
-        return ApiResponse.ok(petService.createPet(command, user.getUserId()));
+        return ApiResponse.ok(petService.createPet(command, user.getUid()));
     }
 
     @Operation(summary = "更新宠物档案", description = "更新指定宠物的档案信息")
@@ -74,7 +74,7 @@ public class PetController {
             @Parameter(description = "宠物 ID") @PathVariable Long petId,
             @Valid @RequestBody PetUpdateCommand command) {
         Objects.requireNonNull(user, "user");
-        return ApiResponse.ok(petService.updatePet(petId, command, user.getUserId()));
+        return ApiResponse.ok(petService.updatePet(petId, command, user.getUid()));
     }
 
     @Operation(summary = "删除宠物档案", description = "软删除指定宠物的档案")
@@ -83,7 +83,7 @@ public class PetController {
             @AuthenticationPrincipal UserPrincipal user,
             @Parameter(description = "宠物 ID") @PathVariable Long petId) {
         Objects.requireNonNull(user, "user");
-        petService.deletePet(petId, user.getUserId());
+        petService.deletePet(petId, user.getUid());
         return ApiResponse.okEmpty();
     }
 
@@ -94,7 +94,7 @@ public class PetController {
             @Parameter(description = "宠物 ID") @PathVariable Long petId,
             @Parameter(description = "头像图片文件") @RequestParam("file") MultipartFile file) {
         Objects.requireNonNull(user, "user");
-        return ApiResponse.ok(petService.uploadAvatar(petId, user.getUserId(), file));
+        return ApiResponse.ok(petService.uploadAvatar(petId, user.getUid(), file));
     }
 
     @Operation(summary = "获取头像上传预签名URL", description = "获取 OSS 直传的预签名 URL，前端使用此 URL 直接上传到 OSS")
@@ -104,7 +104,7 @@ public class PetController {
             @Parameter(description = "宠物 ID") @PathVariable Long petId,
             @Parameter(description = "图片 Content-Type，如 image/jpeg") @RequestParam String contentType) {
         Objects.requireNonNull(user, "user");
-        return ApiResponse.ok(petService.getAvatarUploadUrl(petId, user.getUserId(), contentType));
+        return ApiResponse.ok(petService.getAvatarUploadUrl(petId, user.getUid(), contentType));
     }
 
     @Operation(summary = "确认头像上传", description = "前端上传完成后调用此接口，确认上传成功并保存 avatarKey")
@@ -114,6 +114,6 @@ public class PetController {
             @Parameter(description = "宠物 ID") @PathVariable Long petId,
             @Parameter(description = "上传后的 avatarKey") @RequestParam String avatarKey) {
         Objects.requireNonNull(user, "user");
-        return ApiResponse.ok(petService.confirmAvatarUpload(petId, user.getUserId(), avatarKey));
+        return ApiResponse.ok(petService.confirmAvatarUpload(petId, user.getUid(), avatarKey));
     }
 }

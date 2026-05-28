@@ -29,14 +29,14 @@ public class JpaChatMemoryRepository implements ChatMemoryRepository, ChatMemory
     // =========================================================================
 
     @Override
-    public Message saveUserMessage(Long sessionId, String content) {
-        Message msg = Message.createUserMessage(sessionId, content);
+    public Message saveUserMessage(Long uid, Long sessionId, String agentId, String content) {
+        Message msg = Message.createUserMessage(uid, sessionId, agentId, content);
         return messageRepository.save(msg);
     }
 
     @Override
-    public Message savePendingAiMessage(Long sessionId, String model) {
-        Message msg = Message.createPendingAiMessage(sessionId, model);
+    public Message savePendingAiMessage(Long uid, Long sessionId, String agentId, String model) {
+        Message msg = Message.createPendingAiMessage(uid, sessionId, agentId, model);
         return messageRepository.save(msg);
     }
 
@@ -61,7 +61,7 @@ public class JpaChatMemoryRepository implements ChatMemoryRepository, ChatMemory
             return List.of();
         }
         Long sessionId = Long.parseLong(conversationId);
-        List<Message> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
+        List<Message> messages = messageRepository.findBySessionId(sessionId);
         return messages.stream()
                 .map(this::toSpringAiMessage)
                 .toList();

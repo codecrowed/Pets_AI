@@ -1,10 +1,15 @@
 package jiangxiaopeng.ai.conversation.infrastructure.persistence;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.time.Instant;
 
 @Entity
 @Table(name = "messages")
+@Getter
+@Setter
 public class MessageJpaEntity {
 
     @Id
@@ -12,7 +17,10 @@ public class MessageJpaEntity {
     private Long id;
 
     @Column(name = "uid", nullable = false, unique = true)
-    private String uid;
+    private Long uid;
+
+    @Column(name = "msg_id", nullable = false, unique = true)
+    private String msgId;
 
     @Column(name = "session_id", nullable = false)
     private Long sessionId;
@@ -38,29 +46,12 @@ public class MessageJpaEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "agent_id", nullable = false)
+    private String agentId;
+
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = Instant.now();
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getUid() { return uid; }
-    public void setUid(String uid) { this.uid = uid; }
-    public Long getSessionId() { return sessionId; }
-    public void setSessionId(Long sessionId) { this.sessionId = sessionId; }
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
-    public String getContent() { return content; }
-    public void setContent(String content) { this.content = content; }
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
-    public Integer getTokensPrompt() { return tokensPrompt; }
-    public void setTokensPrompt(Integer tokensPrompt) { this.tokensPrompt = tokensPrompt; }
-    public Integer getTokensCompletion() { return tokensCompletion; }
-    public void setTokensCompletion(Integer tokensCompletion) { this.tokensCompletion = tokensCompletion; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 }

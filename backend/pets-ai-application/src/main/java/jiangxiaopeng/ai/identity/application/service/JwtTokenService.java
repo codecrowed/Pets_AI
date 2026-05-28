@@ -40,7 +40,7 @@ public class JwtTokenService implements AccessTokenParser {
         return Jwts.builder()
                 .subject(String.valueOf(user.getId()))
                 .claims(Map.of(
-                        "uid", user.getUid().value(),
+                        "uid", user.getUid(),
                         "email", user.getEmail() != null ? user.getEmail() : "",
                         "plan", user.getPlan().name()
                 ))
@@ -112,15 +112,14 @@ public class JwtTokenService implements AccessTokenParser {
         }
         try {
             Claims claims = parseToken(rawJwt);
-            long userId = Long.parseLong(claims.getSubject());
-            String uid = claims.get("uid", String.class);
+            Long uid = claims.get("uid", Long.class);
             String email = claims.get("email", String.class);
             String plan = claims.get("plan", String.class);
             return Optional.of(new ParsedAccessToken(
-                    userId,
-                    uid != null ? uid : "",
-                    email != null ? email : "",
-                    plan != null ? plan : ""));
+                uid,
+                email,
+                plan
+            ));
         } catch (Exception e) {
             return Optional.empty();
         }

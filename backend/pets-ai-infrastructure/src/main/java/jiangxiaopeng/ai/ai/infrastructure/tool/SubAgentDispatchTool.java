@@ -46,13 +46,12 @@ public class SubAgentDispatchTool {
             returnDirect = true
     )
     public String dispatchSubAgent(
-            SubAgentDispatchParam subAgentDispatchParam,
+            @ToolParam(description = "子 Agent 的业务 agent_id") long targetAgentId, 
+            @ToolParam(description = "用户意图") String userInstant, 
+            @ToolParam(description = "用户原始消息") String userMessage, 
+            @ToolParam(description = "槽位信息") String slotJson,
             ToolContext toolContext) {
-        log.info("主Agent开始为子Agent分配任务: {}", subAgentDispatchParam);
-        long targetAgentId = subAgentDispatchParam.targetAgentId();
-        String userInstant = subAgentDispatchParam.userInstant();
-        String userMessage = subAgentDispatchParam.userMessage();
-        String slotJson = subAgentDispatchParam.slotJson();
+        log.info("主Agent开始为子Agent分配任务: targetAgentId:{}, userInstant:{}, userMessage:{}, slotJson:{}", targetAgentId, userInstant, userMessage, slotJson);
 
         Map<String, Object> toolCtx = toolContext != null ? toolContext.getContext() : Map.of();
         AgentToolContext agentToolContext = (AgentToolContext) toolCtx.get(AgentToolContext.CONTEXT_KEY);

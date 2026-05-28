@@ -1,4 +1,4 @@
-package jiangxiaopeng.ai.ai.infrastructure.agent;
+package jiangxiaopeng.ai.ai.infrastructure.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

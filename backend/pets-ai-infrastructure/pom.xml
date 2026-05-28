@@ -17,6 +17,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jiangxiaopeng.ai</groupId>
             <artifactId>pets-ai-domain</artifactId>
         </dependency>

@@ -4,7 +4,6 @@ import jiangxiaopeng.ai.conversation.application.command.CreateChatCommand;
 import jiangxiaopeng.ai.conversation.application.dto.*;
 import jiangxiaopeng.ai.conversation.domain.model.ChatSession;
 import jiangxiaopeng.ai.conversation.domain.repository.ChatSessionRepository;
-import jiangxiaopeng.ai.shared.domain.vo.UserId;
 import jiangxiaopeng.ai.shared.exception.BusinessException;
 import jiangxiaopeng.ai.shared.exception.ErrorCode;
 import org.springframework.data.domain.Page;
@@ -30,9 +29,11 @@ public class ChatApplicationService {
 
     public ChatSummaryDto createChat(CreateChatCommand command) {
         ChatSession session = ChatSession.create(
-                new UserId(command.userId()), command.title(), command.model());
+            command.uid(), 
+            command.title(), 
+            command.model());
         session = chatSessionRepository.save(session);
-        return new ChatSummaryDto(session.getUid().value(), session.getTitle(), session.getUpdatedAt());
+        return new ChatSummaryDto(session.getChatId(), session.getUid(), session.getTitle(), session.getUpdatedAt());
     }
 
     @Transactional(readOnly = true)
@@ -41,7 +42,7 @@ public class ChatApplicationService {
         Page<ChatSession> sessionPage = chatSessionRepository.findByUserIdAndStatus(userId, "ACTIVE", pageable);
 
         List<ChatSummaryDto> summaries = sessionPage.getContent().stream()
-                .map(s -> new ChatSummaryDto(s.getUid().value(), s.getTitle(), s.getUpdatedAt()))
+                .map(s -> new ChatSummaryDto(s.getChatId(), s.getUid(), s.getTitle(), s.getUpdatedAt()))
                 .toList();
 
         List<ChatListResponse.ChatGroup> groups = groupByDate(summaries);
@@ -53,38 +54,38 @@ public class ChatApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public ChatSummaryDto getChat(String chatId, Long userId) {
-        ChatSession session = chatSessionRepository.findByUid(chatId)
+    public ChatSummaryDto getChat(String chatId, Long uid) {
+        ChatSession session = chatSessionRepository.findByChatId(chatId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_001));
-        session.validateOwnership(new UserId(userId));
-        return new ChatSummaryDto(session.getUid().value(), session.getTitle(), session.getUpdatedAt());
+        session.validateOwnership(uid);
+        return new ChatSummaryDto(session.getChatId(), session.getUid(), session.getTitle(), session.getUpdatedAt());
     }
 
-    public ChatSummaryDto updateChat(String chatId, Long userId, String title, String model) {
-        ChatSession session = chatSessionRepository.findByUid(chatId)
+    public ChatSummaryDto updateChat(String chatId, Long uid, String title, String model) {
+        ChatSession session = chatSessionRepository.findByChatId(chatId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_001));
-        session.validateOwnership(new UserId(userId));
+        session.validateOwnership(uid);
         session.updateTitle(title);
         session.updateModel(model);
         session = chatSessionRepository.save(session);
-        return new ChatSummaryDto(session.getUid().value(), session.getTitle(), session.getUpdatedAt());
+        return new ChatSummaryDto(session.getChatId(), session.getUid(), session.getTitle(), session.getUpdatedAt());
     }
 
-    public void deleteChat(String chatId, Long userId) {
-        ChatSession session = chatSessionRepository.findByUid(chatId)
+    public void deleteChat(String chatId, Long uid) {
+        ChatSession session = chatSessionRepository.findByChatId(chatId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_001));
-        session.validateOwnership(new UserId(userId));
+        session.validateOwnership(uid);
         session.softDelete();
         chatSessionRepository.save(session);
     }
 
     @Transactional(readOnly = true)
-    public ChatListResponse searchChats(Long userId, String keyword, int page, int size) {
+    public ChatListResponse searchChats(Long uid, String keyword, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "updatedAt"));
-        Page<ChatSession> sessionPage = chatSessionRepository.searchByUserIdAndKeyword(userId, keyword, pageable);
+        Page<ChatSession> sessionPage = chatSessionRepository.searchByUserIdAndKeyword(uid, keyword, pageable);
 
         List<ChatSummaryDto> summaries = sessionPage.getContent().stream()
-                .map(s -> new ChatSummaryDto(s.getUid().value(), s.getTitle(), s.getUpdatedAt()))
+                .map(s -> new ChatSummaryDto(s.getChatId(), s.getUid(), s.getTitle(), s.getUpdatedAt()))
                 .toList();
 
         List<ChatListResponse.ChatGroup> groups = groupByDate(summaries);

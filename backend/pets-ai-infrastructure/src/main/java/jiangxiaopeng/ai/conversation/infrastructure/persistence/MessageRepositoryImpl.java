@@ -1,17 +1,17 @@
 package jiangxiaopeng.ai.conversation.infrastructure.persistence;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.stereotype.Repository;
+
 import jiangxiaopeng.ai.conversation.domain.model.Message;
 import jiangxiaopeng.ai.conversation.domain.model.MessageRole;
 import jiangxiaopeng.ai.conversation.domain.model.MessageStatus;
 import jiangxiaopeng.ai.conversation.domain.model.TokenUsage;
 import jiangxiaopeng.ai.conversation.domain.repository.MessageRepository;
-import jiangxiaopeng.ai.shared.domain.vo.Uid;
-import org.springframework.stereotype.Repository;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class MessageRepositoryImpl implements MessageRepository {
@@ -35,20 +35,20 @@ public class MessageRepositoryImpl implements MessageRepository {
     }
 
     @Override
-    public Optional<Message> findByUid(String uid) {
+    public Optional<Message> findByUid(Long uid) {
         return jpaRepository.findByUid(uid).map(this::toDomain);
     }
 
     @Override
-    public List<Message> findBySessionIdOrderByCreatedAtAsc(Long sessionId) {
-        return jpaRepository.findBySessionIdOrderByCreatedAtAsc(sessionId).stream()
+    public List<Message> findBySessionIdOrderByCreatedAtAsc(Long uid, Long sessionId) {
+        return jpaRepository.findBySessionIdOrderByCreatedAtAsc(uid, sessionId).stream()
                 .map(this::toDomain)
                 .toList();
     }
 
     @Override
-    public List<Message> findBySessionIdWithCursor(Long sessionId, Long cursorId, int size) {
-        List<MessageJpaEntity> results = jpaRepository.findByCursor(sessionId, cursorId, size);
+    public List<Message> findBySessionIdWithCursor(Long uid, Long sessionId, Long cursorId, int size) {
+        List<MessageJpaEntity> results = jpaRepository.findByCursor(uid, sessionId, cursorId, size);
         List<Message> messages = new ArrayList<>(results.stream().map(this::toDomain).toList());
         Collections.reverse(messages);
         return messages;
@@ -62,7 +62,8 @@ public class MessageRepositoryImpl implements MessageRepository {
     private MessageJpaEntity toEntity(Message msg) {
         MessageJpaEntity entity = new MessageJpaEntity();
         entity.setId(msg.getId());
-        entity.setUid(msg.getUid().value());
+        entity.setUid(msg.getUid());
+        entity.setMsgId(msg.getMsgId());
         entity.setSessionId(msg.getSessionId());
         entity.setRole(msg.getRole().name());
         entity.setContent(msg.getContent());
@@ -79,7 +80,8 @@ public class MessageRepositoryImpl implements MessageRepository {
     private Message toDomain(MessageJpaEntity entity) {
         Message msg = new Message();
         msg.setId(entity.getId());
-        msg.setUid(new Uid(entity.getUid()));
+        msg.setMsgId(entity.getMsgId());
+        msg.setUid(entity.getUid());
         msg.setSessionId(entity.getSessionId());
         msg.setRole(MessageRole.valueOf(entity.getRole()));
         msg.setContent(entity.getContent());
@@ -91,4 +93,24 @@ public class MessageRepositoryImpl implements MessageRepository {
         msg.setCreatedAt(entity.getCreatedAt());
         return msg;
     }
+
+    @Override
+    public Optional<Message> findLastUserMessage(Long uid, Long sessionId) {
+
+        return jpaRepository.findListUserMessageByUid(uid, sessionId).map(this::toDomain);
+    }
+
+    @Override
+    public Optional<Message> findByMsgIdUid(String msgId, Long uid) {
+        return jpaRepository.findByMsgIdUid(uid, msgId).map(this::toDomain);
+    }
+
+    @Override
+    public List<Message> findBySessionId(Long sessionId) {
+        return jpaRepository.findBySessionId(sessionId).stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
+    
 }

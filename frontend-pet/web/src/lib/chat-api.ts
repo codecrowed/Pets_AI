@@ -1,6 +1,7 @@
 import { apiJson, authHeaders, getApiBase, messageFromFailedApiResponse } from "./api-client";
 import { appendSseBuffer } from "./sse-parse";
 import type { ChatListResponse, ChatSummaryDto, MessageListResponse } from "./chat-types";
+import type { FeedbackType } from "./chat-types";
 
 export async function createChat(body?: { title?: string | null; model?: string | null }): Promise<ChatSummaryDto> {
   return apiJson<ChatSummaryDto>("/api/v1/chat/createChat", {
@@ -85,28 +86,7 @@ async function readHttpErrorMessage(res: Response): Promise<string> {
   return res.statusText || `请求失败 (${res.status})`;
 }
 
-export async function sendMessageStream(
-  chatId: string,
-  content: string,
-  handlers: StreamMessageHandlers,
-  attachmentIds: string[] | null = null,
-  init?: { signal?: AbortSignal }
-): Promise<void> {
-  const headers = authHeaders();
-  headers.set("Content-Type", "application/json");
-  headers.set("Accept", "text/event-stream");
-  const path = `/api/v1/chats/${encodeURIComponent(chatId)}/messages/stream`;
-  const res = await fetch(`${getApiBase()}${path}`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ content, attachmentIds: attachmentIds ?? [] }),
-    signal: init?.signal,
-  });
-
-  if (!res.ok) {
-    throw new Error(await readHttpErrorMessage(res));
-  }
-
+async function consumeSseResponse(res: Response, handlers: StreamMessageHandlers): Promise<void> {
   const reader = res.body?.getReader();
   if (!reader) {
     throw new Error("无法读取响应流");
@@ -141,4 +121,68 @@ export async function sendMessageStream(
   if (streamFailedRef.current) {
     throw streamFailedRef.current;
   }
+}
+
+export async function sendMessageStream(
+  chatId: string,
+  content: string,
+  handlers: StreamMessageHandlers,
+  attachmentIds: string[] | null = null,
+  init?: { signal?: AbortSignal }
+): Promise<void> {
+  const headers = authHeaders();
+  headers.set("Content-Type", "application/json");
+  headers.set("Accept", "text/event-stream");
+  const path = `/api/v1/chats/${encodeURIComponent(chatId)}/messages/stream`;
+  const res = await fetch(`${getApiBase()}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ content, attachmentIds: attachmentIds ?? [] }),
+    signal: init?.signal,
+  });
+
+  if (!res.ok) {
+    throw new Error(await readHttpErrorMessage(res));
+  }
+
+  await consumeSseResponse(res, handlers);
+}
+
+export async function regenerateMessageStream(
+  chatId: string,
+  msgId: string,
+  handlers: StreamMessageHandlers,
+  init?: { signal?: AbortSignal }
+): Promise<void> {
+  const headers = authHeaders();
+  headers.set("Accept", "text/event-stream");
+  const path = `/api/v1/chats/${encodeURIComponent(chatId)}/messages/${encodeURIComponent(msgId)}/regenerate`;
+  const res = await fetch(`${getApiBase()}${path}`, {
+    method: "POST",
+    headers,
+    signal: init?.signal,
+  });
+
+  if (!res.ok) {
+    throw new Error(await readHttpErrorMessage(res));
+  }
+
+  await consumeSseResponse(res, handlers);
+}
+
+export async function submitMessageFeedback(
+  chatId: string,
+  msgId: string,
+  type: FeedbackType
+): Promise<void> {
+  await apiJson(`/api/v1/chats/${encodeURIComponent(chatId)}/messages/${encodeURIComponent(msgId)}/feedback`, {
+    method: "POST",
+    body: JSON.stringify({ type }),
+  });
+}
+
+export async function removeMessageFeedback(chatId: string, msgId: string): Promise<void> {
+  await apiJson(`/api/v1/chats/${encodeURIComponent(chatId)}/messages/${encodeURIComponent(msgId)}/feedback`, {
+    method: "DELETE",
+  });
 }

@@ -35,7 +35,7 @@ public class ChatController {
             @AuthenticationPrincipal UserPrincipal user,
             @RequestBody(required = false) CreateChatRequest request) {
         var command = new CreateChatCommand(
-                user.getUserId(),
+                user.getUid(),
                 request != null ? request.title() : null,
                 request != null ? request.model() : null
         );
@@ -48,7 +48,7 @@ public class ChatController {
             @AuthenticationPrincipal UserPrincipal user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        return ApiResponse.ok(chatService.listChats(user.getUserId(), page, size));
+        return ApiResponse.ok(chatService.listChats(user.getUid(), page, size));
     }
 
     @Operation(summary = "搜索会话", description = "按关键词搜索会话并分页返回。")
@@ -58,7 +58,7 @@ public class ChatController {
             @RequestParam String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return ApiResponse.ok(chatService.searchChats(user.getUserId(), q, page, size));
+        return ApiResponse.ok(chatService.searchChats(user.getUid(), q, page, size));
     }
 
     @Operation(summary = "获取会话详情", description = "根据 chatId 返回会话摘要。")
@@ -66,7 +66,7 @@ public class ChatController {
     public ApiResponse<ChatSummaryDto> getChat(
             @AuthenticationPrincipal UserPrincipal user,
             @PathVariable String chatId) {
-        return ApiResponse.ok(chatService.getChat(chatId, user.getUserId()));
+        return ApiResponse.ok(chatService.getChat(chatId, user.getUid()));
     }
 
     @Operation(summary = "更新会话", description = "更新标题或默认模型等字段。")
@@ -75,7 +75,7 @@ public class ChatController {
             @AuthenticationPrincipal UserPrincipal user,
             @PathVariable String chatId,
             @RequestBody UpdateChatRequest request) {
-        return ApiResponse.ok(chatService.updateChat(chatId, user.getUserId(), request.title(), request.model()));
+        return ApiResponse.ok(chatService.updateChat(chatId, user.getUid(), request.title(), request.model()));
     }
 
     @Operation(summary = "删除会话", description = "删除指定会话及关联数据（依业务实现）。")
@@ -83,7 +83,7 @@ public class ChatController {
     public ApiResponse<Map<String, Object>> deleteChat(
             @AuthenticationPrincipal UserPrincipal user,
             @PathVariable String chatId) {
-        chatService.deleteChat(chatId, user.getUserId());
+        chatService.deleteChat(chatId, user.getUid());
         return ApiResponse.okEmpty();
     }
 

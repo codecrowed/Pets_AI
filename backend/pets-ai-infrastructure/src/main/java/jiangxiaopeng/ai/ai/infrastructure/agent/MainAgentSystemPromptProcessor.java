@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiAgentConfigEntity;
 import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiAgentConfigRepository;
+import jiangxiaopeng.ai.ai.infrastructure.config.MultiAgentProperties;
 import lombok.extern.slf4j.Slf4j;
 
 /**

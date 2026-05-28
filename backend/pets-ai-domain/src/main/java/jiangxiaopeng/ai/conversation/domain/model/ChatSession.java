@@ -1,17 +1,20 @@
 package jiangxiaopeng.ai.conversation.domain.model;
 
-import jiangxiaopeng.ai.shared.domain.vo.Uid;
-import jiangxiaopeng.ai.shared.domain.vo.UserId;
+import java.time.Instant;
+import java.util.UUID;
+
 import jiangxiaopeng.ai.shared.exception.BusinessException;
 import jiangxiaopeng.ai.shared.exception.ErrorCode;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.time.Instant;
-
+@Getter
+@Setter
 public class ChatSession {
 
     private Long id;
-    private Uid uid;
-    private UserId userId;
+    private String chatId;
+    private Long uid;
     private String title;
     private String model;
     private String status;
@@ -20,10 +23,10 @@ public class ChatSession {
 
     public ChatSession() {}
 
-    public static ChatSession create(UserId userId, String title, String model) {
+    public static ChatSession create(Long uid, String title, String model) {
         ChatSession session = new ChatSession();
-        session.uid = Uid.generate();
-        session.userId = userId;
+        session.chatId = UUID.randomUUID().toString();
+        session.uid = uid;
         session.title = title != null ? title : "New Chat";
         session.model = model != null ? model : "deepseek";
         session.status = "ACTIVE";
@@ -51,8 +54,8 @@ public class ChatSession {
         this.updatedAt = Instant.now();
     }
 
-    public void validateOwnership(UserId requestUserId) {
-        if (!this.userId.equals(requestUserId)) {
+    public void validateOwnership(Long uid) {
+        if (!this.uid.equals(uid)) {
             throw new BusinessException(ErrorCode.CHAT_002);
         }
     }
@@ -61,21 +64,4 @@ public class ChatSession {
         this.updatedAt = Instant.now();
     }
 
-    // Getters and setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Uid getUid() { return uid; }
-    public void setUid(Uid uid) { this.uid = uid; }
-    public UserId getUserId() { return userId; }
-    public void setUserId(UserId userId) { this.userId = userId; }
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-    public String getModel() { return model; }
-    public void setModel(String model) { this.model = model; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
-    public Instant getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
-    public Instant getUpdatedAt() { return updatedAt; }
-    public void setUpdatedAt(Instant updatedAt) { this.updatedAt = updatedAt; }
 }

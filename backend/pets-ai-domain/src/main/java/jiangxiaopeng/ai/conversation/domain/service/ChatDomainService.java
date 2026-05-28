@@ -17,8 +17,8 @@ public class ChatDomainService {
         this.messageRepository = messageRepository;
     }
 
-    public List<Message> buildContext(Long sessionId) {
-        List<Message> allMessages = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
+    public List<Message> buildContext(Long uid, Long sessionId) {
+        List<Message> allMessages = messageRepository.findBySessionIdOrderByCreatedAtAsc(uid, sessionId);
         if (allMessages.size() > MAX_CONTEXT_MESSAGES) {
             return allMessages.subList(allMessages.size() - MAX_CONTEXT_MESSAGES, allMessages.size());
         }

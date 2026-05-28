@@ -94,7 +94,7 @@ public final class RequestContext {
      * 获取当前用户ID
      */
     public static Optional<Long> currentUserId() {
-        return currentUser().map(UserContext::userId);
+        return currentUser().map(UserContext::uid);
     }
 
     /**

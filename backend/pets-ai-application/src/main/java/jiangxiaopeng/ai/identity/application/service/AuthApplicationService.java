@@ -98,7 +98,7 @@ public class AuthApplicationService {
         String accessToken = jwtTokenService.generateAccessToken(user);
         String refreshToken = jwtTokenService.generateRefreshToken(user);
         UserInfoDto userInfo = new UserInfoDto(
-                user.getUid().value(),
+                user.getUid(),
                 user.getUsername(),
                 user.getEmail(),
                 user.getAvatarUrl(),

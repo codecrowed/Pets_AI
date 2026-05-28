@@ -18,7 +18,7 @@ public class UsageTrackingListener {
     @EventListener
     public void onAiReplyCompleted(AiReplyCompletedEvent event) {
         UsageRecordJpaEntity record = new UsageRecordJpaEntity();
-        record.setUserId(event.userId().value());
+        record.setUid(event.uid());
         record.setSessionId(event.sessionId());
         record.setModel(event.model());
         record.setTokensPrompt(event.tokenUsage().promptTokens());

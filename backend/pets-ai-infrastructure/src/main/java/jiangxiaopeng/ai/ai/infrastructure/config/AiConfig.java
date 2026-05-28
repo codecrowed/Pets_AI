@@ -7,7 +7,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import jiangxiaopeng.ai.ai.infrastructure.agent.MultiAgentProperties;
 import jiangxiaopeng.ai.ai.infrastructure.agent.PetAiAgentRuntimeAssembler;
 import jiangxiaopeng.ai.ai.infrastructure.agent.PetAiClientAssemblyService;
 import jiangxiaopeng.ai.ai.infrastructure.agent.advisor.DomainMessageChatMemoryAdvisor;

@@ -1,15 +1,26 @@
 package jiangxiaopeng.ai.ai.infrastructure.agent;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiAgentConfigEntity;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiAgentConfigRepository;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiAgentSkillRelationRepository;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiAgentToolRelationEntity;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiAgentToolRelationRepository;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiClientConfigEntity;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiClientConfigRepository;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiPromptConfigEntity;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiPromptConfigRepository;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiSkillConfigRepository;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiSkillToolRelationRepository;
+import jiangxiaopeng.ai.ai.infrastructure.agent.persistence.PetAiToolConfigRepository;
+import jiangxiaopeng.ai.ai.infrastructure.config.MultiAgentProperties;
 
 /**
  * 从 pet_ai_* 表装配 Agent：client → ChatModel；prompt → 占位符处理；skill 关系 → 技能说明追加；

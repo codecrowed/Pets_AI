@@ -30,14 +30,11 @@ public class MultiAgentChatOrchestrator {
 
     private final PetAiAgentRuntimeAssembler agentRuntimeAssembler;
     private final MessageRepository messageRepository;
-    private final SseEmitterHelper sseEmitterHelper;
 
     public MultiAgentChatOrchestrator(PetAiAgentRuntimeAssembler agentRuntimeAssembler,
-                                      MessageRepository messageRepository,
-                                      SseEmitterHelper sseEmitterHelper) {
+                                      MessageRepository messageRepository) {
         this.agentRuntimeAssembler = agentRuntimeAssembler;
         this.messageRepository = messageRepository;
-        this.sseEmitterHelper = sseEmitterHelper;
     }
 
     public String completeWithMemory(String conversationId, String userMessage) {
@@ -102,7 +99,6 @@ public class MultiAgentChatOrchestrator {
                 .build();
 
         String messageId = UUID.randomUUID().toString();
-        Long sessionId = Long.parseLong(conversationId);
         AgentToolContext toolContext = AgentToolContext.ofStreaming(conversationId, messageId, emitter);
 
         String result = ChatClient.builder(main.chatModel()).build()
@@ -116,22 +112,4 @@ public class MultiAgentChatOrchestrator {
         return result;
     }
 
-    /**
-     * 获取最新的 ASSISTANT 消息的 UID。
-     * 在流完成后调用，用于在 SSE message_end 事件中返回已保存消息的 UID。
-     */
-    private String getLastAssistantMessageUid(Long sessionId) {
-        try {
-            List<Message> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(sessionId);
-            for (int i = messages.size() - 1; i >= 0; i--) {
-                Message msg = messages.get(i);
-                if (msg.getRole() == MessageRole.ASSISTANT && msg.getUid() != null) {
-                    return msg.getUid().value();
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to get last assistant message UID for session {}: {}", sessionId, e.getMessage());
-        }
-        return null;
-    }
 }

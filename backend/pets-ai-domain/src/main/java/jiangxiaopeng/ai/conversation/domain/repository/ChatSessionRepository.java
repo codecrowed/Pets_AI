@@ -8,7 +8,8 @@ import java.util.Optional;
 
 public interface ChatSessionRepository {
     ChatSession save(ChatSession session);
-    Optional<ChatSession> findByUid(String uid);
+    Optional<ChatSession> findByChatId(String chatId);
+    Optional<ChatSession> findByUid(Long uid);
     Optional<ChatSession> findById(Long id);
     Page<ChatSession> findByUserIdAndStatus(Long userId, String status, Pageable pageable);
     Page<ChatSession> searchByUserIdAndKeyword(Long userId, String keyword, Pageable pageable);
