@@ -1,16 +1,23 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createChat,
   listChats,
   listMessages,
+  regenerateMessageStream,
+  removeMessageFeedback,
   searchChats,
   sendMessageStream,
+  submitMessageFeedback,
 } from "../lib/chat-api";
+import type { StreamMessageHandlers } from "../lib/chat-api";
 import { uploadFile } from "../lib/file-api";
-import type { ChatSummaryDto } from "../lib/chat-types";
+import type { ChatSummaryDto, FeedbackType } from "../lib/chat-types";
 import { messageDtoToUi } from "../lib/chat-types";
 import { formatChatItemTime, formatMessageClock } from "../lib/format";
 import { useDebouncedValue } from "../hooks/useDebouncedValue";
+import { AiMessageActions } from "./AiMessageActions";
+import { AiQuickReplies } from "./AiQuickReplies";
+import { getMockQuickReplies } from "../lib/mock-quick-replies";
 import { MarkdownMessage } from "./MarkdownMessage";
 import { TopBar } from "./TopBar";
 import type { Pet } from "../lib/pet-types";
@@ -25,9 +32,16 @@ const SUGGESTIONS = [
   "📷 上传照片分析健康",
 ];
 
-type DisplayRow =
-  | { kind: "text"; id: string; role: "user" | "ai"; content: string; time: string }
-  | { kind: "file"; id: string; name: string; time: string };
+type TextRow = {
+  kind: "text";
+  id: string;
+  role: "user" | "ai";
+  content: string;
+  time: string;
+  feedbackType?: FeedbackType | null;
+};
+
+type DisplayRow = TextRow | { kind: "file"; id: string; name: string; time: string };
 
 type Props = {
   onMenuClick: () => void;
@@ -51,6 +65,7 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
   const [loadingList, setLoadingList] = useState(true);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [awaitingStreamStart, setAwaitingStreamStart] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const streamAbortRef = useRef<AbortController | null>(null);
@@ -90,7 +105,14 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
         for (const m of res.messages) {
           const ui = messageDtoToUi(m);
           const t = formatMessageClock(m.createdAt);
-          next.push({ kind: "text", id: ui.id, role: ui.role, content: ui.content, time: t });
+          next.push({
+            kind: "text",
+            id: ui.id,
+            role: ui.role,
+            content: ui.content,
+            time: t,
+            feedbackType: ui.feedbackType ?? null,
+          });
         }
         setRows(next);
         setShowWelcome(next.length === 0);
@@ -111,7 +133,7 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
   const handleNewChat = async () => {
     try {
       const c = await createChat({});
-      setCurrentChatId(c.id);
+      setCurrentChatId(c.chatId);
       setRows([]);
       setShowWelcome(true);
       await refreshList();
@@ -122,77 +144,75 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
     }
   };
 
-  const send = async () => {
-    const text = input.trim();
-    const files = [...pendingFiles];
-    if (!text && files.length === 0) return;
-    if (text.length > MAX_CHARS) {
-      showToast(`内容请控制在 ${MAX_CHARS} 字以内`, "warning");
-      return;
-    }
+  const updateRowFeedback = useCallback((messageId: string, feedbackType: FeedbackType | null) => {
+    setRows((prev) =>
+      prev.map((row) =>
+        row.kind === "text" && row.id === messageId ? { ...row, feedbackType } : row
+      )
+    );
+  }, []);
 
-    streamAbortRef.current?.abort();
-    const ac = new AbortController();
-    streamAbortRef.current = ac;
-
-    setSending(true);
-    setShowWelcome(false);
-    setInput("");
-    setPendingFiles([]);
-    const now = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
-
-    try {
-      let chatId = currentChatId;
-      if (!chatId) {
-        const c = await createChat({ title: text.slice(0, 40) || "新对话" });
-        chatId = c.id;
-        setCurrentChatId(chatId);
-        await refreshList();
+  const handleCopy = useCallback(
+    async (content: string) => {
+      try {
+        await navigator.clipboard.writeText(content);
+        showToast("已复制", "success");
+      } catch {
+        showToast("复制失败", "warning");
       }
+    },
+    [showToast]
+  );
 
-      const attachmentIds: string[] = [];
-      for (const f of files) {
-        const up = await uploadFile(f, { signal: ac.signal });
-        attachmentIds.push(up.id);
+  const handleFeedback = useCallback(
+    async (messageId: string, type: FeedbackType) => {
+      if (!currentChatId) return;
+      const row = rows.find((r) => r.kind === "text" && r.id === messageId) as TextRow | undefined;
+      const current = row?.feedbackType ?? null;
+      try {
+        if (current === type) {
+          await removeMessageFeedback(currentChatId, messageId);
+          updateRowFeedback(messageId, null);
+        } else {
+          await submitMessageFeedback(currentChatId, messageId, type);
+          updateRowFeedback(messageId, type);
+        }
+      } catch (e) {
+        showToast(e instanceof Error ? e.message : "反馈提交失败", "warning");
       }
+    },
+    [currentChatId, rows, showToast, updateRowFeedback]
+  );
 
-      const fileRows: DisplayRow[] = files.map((f, i) => ({
-        kind: "file" as const,
-        id: `local-file-${Date.now()}-${i}`,
-        name: f.name,
-        time: now,
-      }));
-      const userRows: DisplayRow[] = [];
-      if (text) {
-        userRows.push({
-          kind: "text",
-          id: `local-user-${Date.now()}`,
-          role: "user",
-          content: text,
-          time: now,
-        });
-      }
-      setRows((prev) => [...prev, ...fileRows, ...userRows]);
+  const runStream = useCallback(
+    async (
+      streamFn: (handlers: StreamMessageHandlers, signal: AbortSignal) => Promise<void>,
+      options?: { onBeforeStream?: () => void | Promise<void>; appendAiRow?: boolean }
+    ) => {
+      streamAbortRef.current?.abort();
+      const ac = new AbortController();
+      streamAbortRef.current = ac;
+
+      setSending(true);
+      setAwaitingStreamStart(true);
 
       let accumulatedContent = "";
-      let savedMessageUid: string | null = null;
 
-      await sendMessageStream(
-        chatId,
-        text || "（附件）",
-        {
-          onMessageStart: () => {
-            accumulatedContent = "";
-            setStreamingText("");
-          },
-          onDelta: (delta) => {
-            accumulatedContent += delta;
-            setStreamingText((s) => (s ?? "") + delta);
-          },
-          onMessageEnd: (data) => {
-            savedMessageUid = data.savedMessageUid ?? null;
-            setStreamingText(null);
-            const aiMessageId = savedMessageUid ?? `ai-${Date.now()}`;
+      const handlers: StreamMessageHandlers = {
+        onMessageStart: () => {
+          accumulatedContent = "";
+          setAwaitingStreamStart(false);
+          setStreamingText("");
+        },
+        onDelta: (delta) => {
+          accumulatedContent += delta;
+          setStreamingText((s) => (s ?? "") + delta);
+        },
+        onMessageEnd: (data) => {
+          setAwaitingStreamStart(false);
+          setStreamingText(null);
+          if (options?.appendAiRow !== false) {
+            const aiMessageId = data.savedMessageUid ?? `ai-${Date.now()}`;
             setRows((prev) => [
               ...prev,
               {
@@ -201,28 +221,128 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                 role: "ai",
                 content: accumulatedContent,
                 time: new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" }),
+                feedbackType: null,
               },
             ]);
-          },
-          onError: (err) => {
-            showToast(err.message, "warning");
-            setStreamingText(null);
-          },
+          }
         },
-        attachmentIds.length ? attachmentIds : null,
-        { signal: ac.signal }
-      );
+        onError: (err) => {
+          showToast(err.message, "warning");
+          setAwaitingStreamStart(false);
+          setStreamingText(null);
+        },
+      };
 
-      await refreshList();
-    } catch (e) {
-      if (e instanceof Error && e.name === "AbortError") return;
-      showToast(e instanceof Error ? e.message : "发送失败", "warning");
-    } finally {
-      setSending(false);
-      setStreamingText(null);
-      streamAbortRef.current = null;
+      try {
+        await options?.onBeforeStream?.();
+        await streamFn(handlers, ac.signal);
+        await refreshList();
+      } catch (e) {
+        if (e instanceof Error && e.name === "AbortError") return;
+        showToast(e instanceof Error ? e.message : "请求失败", "warning");
+      } finally {
+        setSending(false);
+        setAwaitingStreamStart(false);
+        setStreamingText(null);
+        streamAbortRef.current = null;
+      }
+    },
+    [refreshList, showToast]
+  );
+
+  const sendWithText = async (messageText: string) => {
+    const text = messageText.trim();
+    const files = [...pendingFiles];
+    if (!text && files.length === 0) return;
+    if (text.length > MAX_CHARS) {
+      showToast(`内容请控制在 ${MAX_CHARS} 字以内`, "warning");
+      return;
     }
+
+    setShowWelcome(false);
+    setInput("");
+    setPendingFiles([]);
+    const now = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
+
+    let chatId = currentChatId;
+    const attachmentIds: string[] = [];
+
+    await runStream(
+      (handlers, signal) =>
+        sendMessageStream(chatId!, text || "（附件）", handlers, attachmentIds.length ? attachmentIds : null, {
+          signal,
+        }),
+      {
+        appendAiRow: true,
+        onBeforeStream: async () => {
+          if (!chatId) {
+            const c = await createChat({ title: text.slice(0, 40) || "新对话" });
+            chatId = c.chatId;
+            setCurrentChatId(chatId);
+            await refreshList();
+          }
+
+          for (const f of files) {
+            const up = await uploadFile(f, { signal: streamAbortRef.current?.signal });
+            attachmentIds.push(String(up.id));
+          }
+
+          const fileRows: DisplayRow[] = files.map((f, i) => ({
+            kind: "file" as const,
+            id: `local-file-${Date.now()}-${i}`,
+            name: f.name,
+            time: now,
+          }));
+          const userRows: DisplayRow[] = [];
+          if (text) {
+            userRows.push({
+              kind: "text",
+              id: `local-user-${Date.now()}`,
+              role: "user",
+              content: text,
+              time: now,
+            });
+          }
+          setRows((prev) => [...prev, ...fileRows, ...userRows]);
+        },
+      }
+    );
   };
+
+  const send = () => void sendWithText(input);
+
+  const handleQuickReply = (text: string) => {
+    if (sending) return;
+    void sendWithText(text);
+  };
+
+  const lastAiMessageId = useMemo(() => {
+    if (streamingText !== null || awaitingStreamStart) return null;
+    for (let i = rows.length - 1; i >= 0; i--) {
+      const row = rows[i];
+      if (row.kind === "text" && row.role === "ai" && row.content.trim()) {
+        return row.id;
+      }
+    }
+    return null;
+  }, [rows, streamingText, awaitingStreamStart]);
+
+  const handleRegenerate = useCallback(
+    async (messageId: string) => {
+      if (!currentChatId || sending) return;
+
+      await runStream(
+        (handlers, signal) => regenerateMessageStream(currentChatId, messageId, handlers, { signal }),
+        {
+          onBeforeStream: () => {
+            setRows((prev) => prev.filter((r) => r.kind !== "text" || r.id !== messageId));
+          },
+          appendAiRow: true,
+        }
+      );
+    },
+    [currentChatId, runStream, sending]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -281,6 +401,8 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
     }
   };
 
+  const actionsDisabled = sending;
+
   return (
     <>
       <TopBar
@@ -330,10 +452,10 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                     </div>,
                     ...g.chats.map((c) => (
                       <button
-                        key={c.id}
+                        key={c.chatId}
                         type="button"
-                        className={`ch-item${currentChatId === c.id ? " active" : ""}`}
-                        onClick={() => handleSelectChat(c.id)}
+                        className={`ch-item${currentChatId === c.chatId ? " active" : ""}`}
+                        onClick={() => handleSelectChat(c.chatId)}
                       >
                         <span className="ch-item-icon">🤖</span>
                         <div className="ch-item-body">
@@ -401,6 +523,24 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                             variant={row.role === "ai" ? "ai" : "user"}
                           />
                         </div>
+                        {row.role === "ai" && (
+                          <AiMessageActions
+                            content={row.content}
+                            messageId={row.id}
+                            feedbackType={row.feedbackType ?? null}
+                            disabled={actionsDisabled}
+                            onCopy={() => void handleCopy(row.content)}
+                            onFeedback={(type) => void handleFeedback(row.id, type)}
+                            onRegenerate={() => void handleRegenerate(row.id)}
+                          />
+                        )}
+                        {row.role === "ai" && row.id === lastAiMessageId && (
+                          <AiQuickReplies
+                            options={getMockQuickReplies(row.id)}
+                            disabled={actionsDisabled}
+                            onSelect={handleQuickReply}
+                          />
+                        )}
                         <div className="msg-time">{row.time}</div>
                       </div>
                     </div>
@@ -418,7 +558,7 @@ export function AskAiPage({ onMenuClick, pets, activePet, onSwitchPet, onAddPet 
                   </div>
                 )}
 
-                {sending && streamingText === null && (
+                {awaitingStreamStart && (
                   <div className="msg-row ai" id="typingRow">
                     <div className="msg-avatar ai">🐾</div>
                     <div className="msg-bubble" style={{ padding: 0 }}>

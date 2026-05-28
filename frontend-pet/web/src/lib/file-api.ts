@@ -2,7 +2,7 @@ import { authHeaders, getApiBase, messageFromFailedApiResponse } from "./api-cli
 import type { ApiResponse } from "./api-client";
 
 export type FileUploadResponse = {
-  id: string;
+  id: number;
   name: string;
   contentType: string;
   fileSize: number;

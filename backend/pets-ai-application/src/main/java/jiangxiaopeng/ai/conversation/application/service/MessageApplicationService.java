@@ -1,5 +1,6 @@
 package jiangxiaopeng.ai.conversation.application.service;
 
+import jiangxiaopeng.ai.conversation.application.command.GetMessageCommand;
 import jiangxiaopeng.ai.conversation.application.command.SendMessageCommand;
 import jiangxiaopeng.ai.conversation.application.command.SubmitFeedbackCommand;
 import jiangxiaopeng.ai.conversation.application.dto.MessageDto;
@@ -14,7 +15,6 @@ import jiangxiaopeng.ai.conversation.domain.repository.MessageRepository;
 import jiangxiaopeng.ai.conversation.domain.service.AiModelRouter;
 import jiangxiaopeng.ai.conversation.domain.service.ChatDomainService;
 import jiangxiaopeng.ai.shared.DomainEventPublisher;
-import jiangxiaopeng.ai.shared.domain.vo.UserId;
 import jiangxiaopeng.ai.shared.exception.BusinessException;
 import jiangxiaopeng.ai.shared.exception.ErrorCode;
 import org.springframework.stereotype.Service;
@@ -47,25 +47,25 @@ public class MessageApplicationService {
     }
 
     @Transactional(readOnly = true)
-    public MessageListResponse listMessages(String chatId, Long userId, Long cursorId, int size) {
-        ChatSession session = chatSessionRepository.findByUid(chatId)
+    public MessageListResponse listMessages(GetMessageCommand command) {
+        ChatSession session = chatSessionRepository.findByUid(command.getUid())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_001));
-        session.validateOwnership(new UserId(userId));
+        session.validateOwnership(command.getUid());
 
         List<Message> messages;
         boolean hasMore;
 
-        if (cursorId != null) {
-            messages = messageRepository.findBySessionIdWithCursor(session.getId(), cursorId, size + 1);
-            hasMore = messages.size() > size;
+        if (command.getCursorId() != null) {
+            messages = messageRepository.findBySessionIdWithCursor(session.getUid(), session.getId(), command.getCursorId(), command.getSize() + 1);
+            hasMore = messages.size() > command.getSize();
             if (hasMore) {
                 messages = new ArrayList<>(messages.subList(1, messages.size()));
             }
         } else {
-            List<Message> all = messageRepository.findBySessionIdOrderByCreatedAtAsc(session.getId());
-            hasMore = all.size() > size;
+            List<Message> all = messageRepository.findBySessionIdOrderByCreatedAtAsc(session.getUid(), session.getId());
+            hasMore = all.size() > command.getSize();
             if (hasMore) {
-                messages = new ArrayList<>(all.subList(all.size() - size, all.size()));
+                messages = new ArrayList<>(all.subList(all.size() - command.getSize(), all.size()));
             } else {
                 messages = all;
             }
@@ -82,16 +82,16 @@ public class MessageApplicationService {
     }
 
     public MessageDto sendMessageSync(SendMessageCommand command) {
-        ChatSession session = chatSessionRepository.findByUid(command.chatId())
+        ChatSession session = chatSessionRepository.findByUid(command.uid())
                 .orElseThrow(() -> new BusinessException(ErrorCode.CHAT_001));
-        session.validateOwnership(new UserId(command.userId()));
+        session.validateOwnership(command.uid());
 
         // DomainMessageChatMemoryAdvisor 在 before/after 中自动保存用户消息和 AI 回复
         String conversationId = String.valueOf(session.getId());
         aiModelRouter.complete(conversationId, command.content());
 
         // advisor 已将 AI 回复持久化（含 model、tokenUsage），从 DB 取最新 ASSISTANT 消息
-        List<Message> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(session.getId());
+        List<Message> messages = messageRepository.findBySessionIdOrderByCreatedAtAsc(session.getUid(), session.getId());
         Message aiMsg = findLastAssistant(messages);
 
         // Auto-update title
@@ -101,7 +101,7 @@ public class MessageApplicationService {
 
         // Publish domain event
         eventPublisher.publish(new AiReplyCompletedEvent(
-                new UserId(command.userId()), session.getId(), session.getModel(),
+                command.uid(), session.getId(), session.getModel(),
                 aiMsg.getTokenUsage() != null ? aiMsg.getTokenUsage() : new TokenUsage(0, 0)
         ));
 
@@ -118,14 +118,14 @@ public class MessageApplicationService {
     }
 
     public void submitFeedback(SubmitFeedbackCommand command) {
-        Message message = messageRepository.findByUid(command.messageId())
+        Message message = messageRepository.findByMsgIdUid(command.msgId(), command.uid())
                 .orElseThrow(() -> new BusinessException(ErrorCode.MSG_003));
-        message.submitFeedback(new UserId(command.userId()), command.type());
+        message.submitFeedback(command.uid(), command.type());
         messageRepository.save(message);
     }
 
-    public void removeFeedback(String messageId, Long userId) {
-        Message message = messageRepository.findByUid(messageId)
+    public void removeFeedback(SubmitFeedbackCommand command) {
+        Message message = messageRepository.findByMsgIdUid(command.msgId(), command.uid())
                 .orElseThrow(() -> new BusinessException(ErrorCode.MSG_003));
         message.clearFeedback();
         messageRepository.save(message);
@@ -133,7 +133,7 @@ public class MessageApplicationService {
 
     private MessageDto toDto(Message msg) {
         return new MessageDto(
-                msg.getUid().value(),
+                msg.getMsgId(),
                 msg.getRole().name(),
                 msg.getContent(),
                 null,

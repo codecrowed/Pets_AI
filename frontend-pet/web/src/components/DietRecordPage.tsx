@@ -13,7 +13,6 @@ import {
   getDailyWaterStats,
   getContinuousDays,
   addDietRecord,
-  deleteDietRecord,
   searchFoods,
   getFrequentFoods,
   analyzeDiet,
@@ -358,17 +357,6 @@ export function DietRecordPage({ onMenuClick, pets, activePet, onSwitchPet, onAd
       loadData();
     } catch (err) {
       console.error("Failed to delete water record", err);
-      showToast("删除失败", "warning");
-    }
-  }, [loadData]);
-
-  const handleDeleteRecord = useCallback(async (recordId: number) => {
-    try {
-      await deleteDietRecord(recordId);
-      showToast("已删除记录", "success");
-      loadData();
-    } catch (err) {
-      console.error("Failed to delete record", err);
       showToast("删除失败", "warning");
     }
   }, [loadData]);

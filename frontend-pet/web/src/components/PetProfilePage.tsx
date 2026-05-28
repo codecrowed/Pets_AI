@@ -1,4 +1,5 @@
-import { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef, ChangeEvent } from "react";
+import { useState, useCallback, useRef, useEffect, useImperativeHandle, forwardRef } from "react";
+import type { ChangeEvent } from "react";
 import { TopBar } from "./TopBar";
 import { type Pet, createEmptyPet, showToast } from "../lib/pet-types";
 import { uploadPetAvatar } from "../lib/pet-api";
@@ -127,7 +128,7 @@ export const PetProfilePage = forwardRef<PetProfilePageRef, PetProfilePageProps>
   const [customBreedInput, setCustomBreedInput] = useState("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [, setPendingAvatarFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const originalEmojiRef = useRef("🐕");
 

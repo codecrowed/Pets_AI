@@ -8,7 +8,7 @@ import {
 } from "./auth-storage";
 
 export type UserInfo = {
-  uid: string;
+  uid: number;
   username: string;
   email: string;
   avatarUrl: string | null;
