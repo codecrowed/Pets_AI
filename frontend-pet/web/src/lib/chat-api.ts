@@ -43,6 +43,13 @@ function dispatchSseEvent(
   handlers: StreamMessageHandlers,
   streamFailedRef: { current: Error | null }
 ) {
+  if (e.event === "ai_token") {
+    if (e.data.length > 0) {
+      handlers.onDelta?.(e.data);
+    }
+    return;
+  }
+
   let parsed: unknown;
   try {
     parsed = JSON.parse(e.data) as unknown;
@@ -60,11 +67,17 @@ function dispatchSseEvent(
     handlers.onMessageEnd?.(parsed as { messageId: string; finishReason: string; savedMessageUid?: string });
   } else if (e.event === "error") {
     const err = parsed as { code?: string; message?: string };
+    const message =
+      typeof err.message === "string"
+        ? err.message
+        : typeof e.data === "string" && e.data.length > 0
+          ? e.data
+          : "Unknown error";
     handlers.onError?.({
       code: typeof err.code === "string" ? err.code : "ERROR",
-      message: typeof err.message === "string" ? err.message : "Unknown error",
+      message,
     });
-    streamFailedRef.current = new Error(typeof err.message === "string" ? err.message : "流式响应错误");
+    streamFailedRef.current = new Error(message);
   }
 }
 

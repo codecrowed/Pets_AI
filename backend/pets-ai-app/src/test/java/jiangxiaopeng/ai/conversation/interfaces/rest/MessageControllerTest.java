@@ -1,16 +1,16 @@
 package jiangxiaopeng.ai.conversation.interfaces.rest;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
-import java.time.Instant;
-
+import jiangxiaopeng.ai.conversation.application.command.SendMessageCommand;
+import jiangxiaopeng.ai.conversation.application.dto.MessageDto;
+import jiangxiaopeng.ai.conversation.application.service.MessageApplicationService;
+import jiangxiaopeng.ai.conversation.application.service.StreamingChatService;
+import jiangxiaopeng.ai.conversation.domain.model.MessageStatus;
+import jiangxiaopeng.ai.conversation.domain.model.TokenUsage;
+import jiangxiaopeng.ai.identity.infrastructure.security.UserPrincipal;
+import jiangxiaopeng.ai.shared.exception.BusinessException;
+import jiangxiaopeng.ai.shared.exception.ErrorCode;
+import jiangxiaopeng.ai.shared.infrastructure.web.ApiResponseBodyAdvice;
+import jiangxiaopeng.ai.shared.infrastructure.web.GlobalExceptionHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -29,15 +29,13 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import jiangxiaopeng.ai.conversation.application.command.SendMessageCommand;
-import jiangxiaopeng.ai.conversation.application.dto.MessageDto;
-import jiangxiaopeng.ai.conversation.application.service.MessageApplicationService;
-import jiangxiaopeng.ai.conversation.application.service.StreamingChatService;
-import jiangxiaopeng.ai.identity.infrastructure.security.UserPrincipal;
-import jiangxiaopeng.ai.shared.exception.BusinessException;
-import jiangxiaopeng.ai.shared.exception.ErrorCode;
-import jiangxiaopeng.ai.shared.infrastructure.web.ApiResponseBodyAdvice;
-import jiangxiaopeng.ai.shared.infrastructure.web.GlobalExceptionHandler;
+import java.time.Instant;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
 class MessageControllerTest {
@@ -90,7 +88,7 @@ class MessageControllerTest {
         @DisplayName("happy path - returns 200 with MessageDto")
         void happyPath_returns200() throws Exception {
             var expectedDto = new MessageDto(
-                    1L, "ASSISTANT", "Hello! How can I help?", null, null,
+                    "1", "ASSISTANT", "Hello! How can I help?", null, null,
                     "deepseek", Instant.now()
             );
             when(messageService.sendMessageSync(any(SendMessageCommand.class)))
@@ -115,7 +113,7 @@ class MessageControllerTest {
         @DisplayName("happy path with attachmentIds - passes correct command")
         void withAttachments_passesAttachmentsToCommand() throws Exception {
             var expectedDto = new MessageDto(
-                    2L, "ASSISTANT", "I see the file.", null, null,
+                    "2", "ASSISTANT", "I see the file.", null, null,
                     "deepseek", Instant.now()
             );
             when(messageService.sendMessageSync(any(SendMessageCommand.class)))
